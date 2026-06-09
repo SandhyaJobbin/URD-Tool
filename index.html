@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tripadvisor — Content Moderation Training</title>
+<style>
+:root{
+  --green:#34E0A1;--green-d:#00AF87;--black:#000;--ink:#1a1a1a;
+  --gray:#767676;--gray-l:#E8E8E8;--bdr:#DEDEDE;--surf:#F5F5F5;
+  --white:#FFF;--red:#D0021B;--orange:#E8781A;--blue:#0055CC;--purple:#7B2D8B;
+  --pub:#00AF87;--mod:#E8781A;--mem:#C0392B;--prop:#7B2D8B;
+  --font:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  --sh:0 2px 8px rgba(0,0,0,.09);--sh-lg:0 8px 32px rgba(0,0,0,.14);
+  --r:6px;--tr:.16s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--surf);color:var(--ink);min-height:100vh;}
+button{font-family:var(--font);cursor:pointer;border:none;outline:none;}
+input,select,textarea{font-family:var(--font);outline:none;box-sizing:border-box;}
+select{cursor:pointer;}
+.hidden{display:none!important;}
+
+/* ── LOGIN ── */
+#phase-login{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto;}
+.login-bg{position:absolute;inset:0;background:linear-gradient(135deg,#f9fffe,#e8fdf7 50%,#f0f9ff);z-index:0;}
+.login-card{position:relative;z-index:1;background:#fff;border:1px solid var(--bdr);border-radius:14px;padding:36px 36px 32px;width:min(480px,96vw);box-shadow:var(--sh-lg);margin:24px auto;}
+.login-logo{text-align:center;margin-bottom:18px;}
+.login-title{font-size:20px;font-weight:700;color:var(--ink);margin-bottom:3px;text-align:center;}
+.login-sub{font-size:12px;color:var(--gray);text-align:center;margin-bottom:18px;}
+.login-field{margin-bottom:13px;}
+.login-field label{display:block;font-size:10px;font-weight:700;color:var(--ink);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
+.login-field input,.login-field select{width:100%;padding:10px 12px;border:1.5px solid var(--bdr);border-radius:var(--r);font-size:13px;color:var(--ink);transition:border-color var(--tr);background:#fff;}
+.login-field input:focus,.login-field select:focus{border-color:var(--green-d);}
+.login-field input.invalid{border-color:var(--red);}
+.login-err{font-size:10px;color:var(--red);margin-top:3px;display:none;}
+.day-info-box{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:8px 11px;margin-top:5px;font-size:10px;color:var(--gray);line-height:1.5;display:none;}
+.day-info-box strong{color:var(--ink);}
+.btn-launch{width:100%;padding:12px;background:var(--green-d);color:#fff;border-radius:var(--r);font-size:14px;font-weight:700;transition:background var(--tr),opacity var(--tr);margin-top:6px;}
+.btn-launch:disabled{opacity:.4;cursor:not-allowed;}
+.btn-launch:not(:disabled):hover{background:#008060;}
+
+/* ── ONBOARDING ── */
+#phase-onboarding{display:none;flex-direction:column;min-height:100vh;}
+.onboard-nav{height:50px;background:var(--black);display:flex;align-items:center;padding:0 22px;flex-shrink:0;}
+.onboard-body{flex:1;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;}
+.onboard-card{background:#fff;border:1px solid var(--bdr);border-radius:14px;padding:32px 40px;max-width:640px;width:100%;box-shadow:var(--sh);}
+.onboard-badge{display:inline-block;background:var(--green);color:#000;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 11px;border-radius:20px;margin-bottom:12px;}
+.onboard-day-tag{display:inline-block;background:#fff0e8;color:var(--orange);border:1px solid #ffd4b8;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 11px;border-radius:20px;margin-bottom:12px;margin-left:6px;}
+.onboard-card h1{font-size:22px;font-weight:800;color:var(--ink);margin-bottom:4px;}
+.onboard-card p.lead{font-size:12px;color:var(--gray);margin-bottom:18px;line-height:1.6;}
+.onboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.onboard-metric{background:var(--surf);border-radius:var(--r);padding:12px 14px;border-left:3px solid var(--green-d);}
+.onboard-metric .val{font-size:18px;font-weight:800;color:var(--ink);}
+.onboard-metric .lbl{font-size:9px;color:var(--gray);margin-top:2px;}
+.onboard-rules{margin-bottom:18px;}
+.onboard-rules h3{font-size:10px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.rule-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.rule-dot{width:4px;height:4px;border-radius:50%;background:var(--green-d);flex-shrink:0;margin-top:5px;}
+.rule-row p{font-size:11px;color:var(--gray);line-height:1.5;}
+.rule-row p strong{color:var(--ink);}
+.btn-begin{padding:11px 32px;background:var(--green-d);color:#fff;border-radius:var(--r);font-size:13px;font-weight:700;transition:background var(--tr);}
+.btn-begin:hover{background:#008060;}
+
+/* ── WORKSPACE ── */
+#phase-workspace{display:none;flex-direction:column;min-height:100vh;}
+
+/* Navbar */
+.ws-navbar{height:50px;background:var(--black);display:flex;align-items:center;gap:8px;padding:0 12px;flex-shrink:0;flex-wrap:nowrap;position:relative;}
+.ws-search{flex:0 0 160px;position:relative;}
+.ws-search input{width:100%;height:28px;padding:0 8px 0 26px;border-radius:16px;border:none;background:rgba(255,255,255,.12);color:#fff;font-size:11px;}
+.ws-search input::placeholder{color:rgba(255,255,255,.4);}
+.ws-search .ico{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.4);font-size:11px;}
+/* Sample IDs dropdown — special: shows all active Q IDs */
+.ws-nav-select{height:28px;padding:0 7px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);border-radius:4px;color:#fff;font-size:11px;}
+.ws-nav-select option{color:var(--ink);background:#fff;}
+.ws-nav-tabs{display:flex;gap:2px;flex-shrink:0;position:relative;}
+.ws-nav-tab{height:28px;padding:0 10px;border-radius:4px;font-size:11px;font-weight:600;color:rgba(255,255,255,.65);background:transparent;transition:all var(--tr);}
+.ws-nav-tab:hover{background:rgba(255,255,255,.1);color:#fff;}
+.ws-nav-tab.active{background:var(--green-d);color:#fff;}
+/* Navbar dropdown panels for Reviews / Advanced */
+.nav-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh-lg);z-index:500;min-width:230px;display:none;}
+.nav-dropdown.show{display:block;}
+.nav-dropdown h5{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
+.nav-dd-checks{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.nav-dd-check{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink);cursor:pointer;padding:3px 5px;border-radius:4px;transition:background var(--tr);}
+.nav-dd-check:hover{background:var(--surf);}
+.nav-dd-check input{width:13px;height:13px;accent-color:var(--green-d);cursor:pointer;flex-shrink:0;}
+.nav-dd-check.checked{background:#f0fdf4;color:#15803d;font-weight:600;}
+.ws-nav-right{margin-left:auto;display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.ws-score-badge{background:rgba(52,224,161,.15);border:1px solid var(--green);border-radius:16px;padding:2px 10px;font-size:10px;font-weight:700;color:var(--green);white-space:nowrap;}
+.ws-timer-badge{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:2px 10px;font-size:11px;font-weight:700;color:#fff;min-width:58px;text-align:center;font-variant-numeric:tabular-nums;transition:background .3s,border-color .3s,color .3s;}
+.ws-timer-badge.warning{background:rgba(208,2,27,.2);border-color:var(--red);color:var(--red);animation:tpulse .6s ease-in-out infinite alternate;}
+@keyframes tpulse{from{opacity:1;}to{opacity:.6;}}
+.ws-qnum{font-size:10px;color:rgba(255,255,255,.55);white-space:nowrap;}
+.dark-btn{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:2px 7px;color:#fff;font-size:10px;flex-shrink:0;}
+
+.progress-bar-wrap{height:3px;background:rgba(0,0,0,.1);flex-shrink:0;}
+.progress-bar-fill{height:100%;background:var(--green);transition:width .4s ease;}
+
+.ws-body{display:flex;flex:1;min-height:0;}
+
+/* Sidenav */
+.ws-sidenav{width:186px;min-width:186px;background:#fff;border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow-y:auto;}
+.sidenav-section{padding:8px 0 2px;}
+.sidenav-section-title{font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:1px;padding:0 11px 4px;}
+.sidenav-field{padding:0 9px 8px;}
+.sidenav-field select{width:100%;padding:5px 7px;border:1px solid var(--bdr);border-radius:4px;font-size:11px;color:var(--ink);}
+.sidenav-classifier-val{font-size:11px;font-weight:700;color:var(--ink);padding:5px 7px;background:var(--surf);border-radius:4px;border:1px solid var(--bdr);word-break:break-word;}
+.sidenav-tabs{display:flex;flex-direction:column;gap:2px;padding:3px 7px 8px;}
+.sidenav-tab{padding:7px 9px;border-radius:4px;font-size:11px;font-weight:600;color:var(--gray);background:transparent;text-align:left;transition:all var(--tr);}
+.sidenav-tab:hover{background:var(--surf);color:var(--ink);}
+.sidenav-tab.active{background:var(--green);color:#000;font-weight:700;}
+
+/* Content */
+.ws-content{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;}
+.content-subnav{height:40px;background:#fff;border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 12px;gap:9px;flex-shrink:0;flex-wrap:wrap;}
+.ta-logo-sm{font-size:11px;font-weight:800;color:var(--ink);white-space:nowrap;}
+.reviewer-id-badge{background:var(--surf);border:1px solid var(--bdr);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--ink);white-space:nowrap;}
+.search-id-wrap{display:flex;align-items:center;gap:4px;background:var(--surf);border:1px solid var(--bdr);border-radius:4px;padding:2px 7px;}
+.search-id-wrap span{font-size:9px;color:var(--gray);}
+.search-id-wrap strong{font-size:9px;color:var(--ink);}
+.queue-mode-badge{padding:2px 8px;border-radius:16px;font-size:9px;font-weight:700;}
+.day-mode-badge{padding:2px 8px;border-radius:16px;font-size:9px;font-weight:700;background:#fff0e8;color:var(--orange);border:1px solid #ffd4b8;}
+.subnav-arrows{margin-left:auto;display:flex;gap:4px;}
+.arrow-btn{width:26px;height:26px;border-radius:4px;background:var(--surf);border:1px solid var(--bdr);font-size:13px;display:flex;align-items:center;justify-content:center;transition:all var(--tr);}
+.arrow-btn:hover:not(:disabled){background:var(--green);border-color:var(--green);}
+.arrow-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* Question area */
+.question-area{display:flex;flex:1;overflow:hidden;min-height:0;}
+.qleft{flex:0 0 80%;max-width:80%;display:flex;overflow:hidden;border-right:1px solid var(--bdr);}
+.qleft-col1{flex:0 0 50%;max-width:50%;overflow-y:auto;padding:10px;border-right:1px solid var(--bdr);}
+.qleft-col2{flex:0 0 50%;max-width:50%;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;}
+
+/* Collapsibles */
+.collapsible{border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:6px;overflow:hidden;}
+.collapsible-header{display:flex;align-items:center;justify-content:space-between;padding:6px 9px;background:var(--surf);cursor:pointer;user-select:none;}
+.collapsible-header h4{font-size:9.5px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.4px;}
+.toggle-btn{width:16px;height:16px;border-radius:3px;background:#fff;border:1px solid var(--bdr);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--gray);flex-shrink:0;line-height:1;}
+.collapsible-body{padding:8px 9px;font-size:9px;color:var(--ink);line-height:1.7;}
+.collapsible-body.closed{display:none;}
+
+/* Data rows */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 5px;}
+.info-row{display:flex;gap:3px;font-size:9px;min-width:0;}
+.info-lbl{color:var(--gray);white-space:nowrap;flex-shrink:0;}
+.info-val{color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.masked{font-family:monospace;letter-spacing:.4px;}
+.karma-row{display:flex;justify-content:space-between;margin-bottom:2px;font-size:9px;}
+.karma-lbl{color:var(--gray);}
+.karma-val{color:var(--ink);font-weight:600;}
+.ban-badge{display:inline-block;background:#fef2f2;border:1px solid #fecaca;color:var(--red);border-radius:3px;padding:0 4px;font-size:8px;font-weight:700;}
+.clean-badge{display:inline-block;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:3px;padding:0 4px;font-size:8px;font-weight:700;}
+.star-row{display:flex;gap:1px;}
+.star{font-size:9px;color:var(--green-d);}
+.star.empty{color:var(--gray-l);}
+.rating-row{margin-bottom:2px;font-size:9px;}
+.rating-bar{height:3px;background:var(--gray-l);border-radius:3px;margin-top:2px;}
+.rating-fill{height:100%;background:var(--green-d);border-radius:3px;}
+
+/* Member history rows */
+.hist-row{border:1px solid var(--bdr);border-radius:4px;margin-bottom:4px;padding:5px 8px;font-size:8.5px;line-height:1.6;}
+.hist-row-head{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.hist-id{font-weight:700;color:var(--blue);font-family:monospace;}
+.hist-loc{color:var(--gray);}
+.hist-title{font-style:italic;color:var(--ink);margin-top:2px;}
+.hist-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
+.hist-pub{color:var(--green-d);font-weight:600;}
+.hist-rem{color:var(--red);font-weight:600;}
+
+/* Review content col2 */
+.review-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.review-header-row span{font-size:9.5px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.4px;}
+.lang-select-sm{padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;font-size:9.5px;color:var(--ink);}
+.review-title-text{font-size:11px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.review-body-text{font-size:10px;color:var(--ink);line-height:1.6;background:var(--surf);border-radius:var(--r);padding:9px;border:1px solid var(--bdr);margin-bottom:7px;}
+.comment-label{font-size:9px;font-weight:700;color:var(--ink);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
+.comment-box{width:100%;resize:vertical;border:1px solid var(--bdr);border-radius:var(--r);font-size:10px;padding:6px 8px;color:var(--ink);line-height:1.6;min-height:58px;}
+.comment-box:focus{border-color:var(--green-d);}
+
+/* Right 20% */
+.qright{flex:0 0 20%;max-width:20%;overflow-y:auto;display:flex;flex-direction:column;background:#fff;}
+.rp-section{border-bottom:1px solid var(--bdr);}
+.rp-section-title{font-size:8.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.7px;padding:7px 9px 3px;background:var(--surf);}
+.rp-body{padding:7px 9px;}
+/* Queue section with filter checkboxes */
+.queue-tabs{display:flex;gap:3px;margin-bottom:7px;}
+.queue-tab{flex:1;padding:4px 5px;border-radius:4px;font-size:9.5px;font-weight:700;background:var(--surf);border:1px solid var(--bdr);color:var(--gray);transition:all var(--tr);position:relative;}
+.queue-tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+/* Queue filter dropdown */
+.queue-filter-panel{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:8px 9px;margin-bottom:7px;display:none;}
+.queue-filter-panel.open{display:block;}
+.queue-filter-panel h6{font-size:8.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;}
+.qf-check{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--ink);cursor:pointer;padding:2px 0;}
+.qf-check input{width:12px;height:12px;accent-color:var(--green-d);cursor:pointer;}
+.assign-wrap label{font-size:8.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:3px;}
+.assign-wrap select{width:100%;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;font-size:9.5px;color:var(--ink);}
+/* Action buttons */
+.right-action-btns{display:flex;flex-direction:column;gap:4px;}
+.right-btn{padding:8px 9px;border-radius:5px;font-size:10.5px;font-weight:700;color:#fff;transition:all var(--tr);text-align:center;width:100%;}
+.right-btn:disabled{opacity:.45;cursor:not-allowed;}
+.right-btn.pub{background:var(--pub);}
+.right-btn.pub:hover:not(:disabled){background:#008060;}
+.right-btn.mod{background:var(--mod);}
+.right-btn.mod:hover:not(:disabled){background:#c5650e;}
+.right-btn.mem{background:var(--mem);}
+.right-btn.mem:hover:not(:disabled){background:#9c2b1f;}
+.right-btn.prop{background:var(--prop);}
+.right-btn.prop:hover:not(:disabled){background:#622175;}
+/* Chips */
+.rp-chip-group{display:flex;flex-wrap:wrap;gap:4px;padding:6px 9px;}
+.rp-chip{padding:3px 7px;border-radius:16px;font-size:9.5px;font-weight:600;background:#fff;border:1px solid var(--bdr);color:var(--ink);transition:all var(--tr);}
+.rp-chip:hover{background:var(--surf);border-color:#999;}
+.rp-chip.blue{border-color:#b3d1ff;color:var(--blue);background:#f0f6ff;}
+.rp-chip.blue:hover{background:#e0eeff;}
+/* Helpful links */
+.rp-select-wrap{padding:0 9px 5px;}
+.rp-select-wrap select{width:100%;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;font-size:9.5px;color:var(--ink);}
+.rp-label{font-size:8.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;padding:3px 9px 2px;}
+.rp-email-list{padding:0 9px 6px;display:flex;flex-direction:column;gap:2px;}
+.rp-email-item{font-size:9.5px;color:var(--blue);cursor:pointer;padding:2px 4px;border-radius:3px;transition:background var(--tr);}
+.rp-email-item:hover{background:#f0f6ff;}
+/* CSR */
+.csr-body{padding:0 9px 8px;display:flex;flex-direction:column;gap:4px;}
+.csr-select{width:100%;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;font-size:9.5px;color:var(--ink);}
+.csr-checks{display:flex;flex-direction:column;gap:3px;}
+.csr-check{display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--ink);cursor:pointer;}
+.csr-check input{width:12px;height:12px;cursor:pointer;accent-color:var(--green-d);}
+.csr-submit{width:100%;padding:6px;background:var(--red);color:#fff;border-radius:4px;font-size:9.5px;font-weight:700;transition:background var(--tr);}
+.csr-submit:hover{background:#b01318;}
+
+/* ── MODAL: REASON ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:flex;align-items:center;justify-content:center;padding:14px;}
+.modal-card{background:#fff;border-radius:12px;padding:22px;width:min(440px,96vw);box-shadow:var(--sh-lg);max-height:90vh;overflow-y:auto;}
+.modal-card h3{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.modal-sub{font-size:10px;color:var(--gray);margin-bottom:12px;}
+.modal-select{width:100%;padding:8px 9px;border:1.5px solid var(--bdr);border-radius:var(--r);font-size:12px;color:var(--ink);margin-bottom:10px;}
+.modal-select:focus{border-color:var(--green-d);}
+.modal-comment-lbl{font-size:8.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.modal-pre-comment{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:8px;font-size:10px;color:var(--ink);line-height:1.6;min-height:46px;margin-bottom:12px;white-space:pre-wrap;}
+.modal-footer{display:flex;justify-content:flex-end;gap:6px;}
+.btn-modal-cancel{padding:7px 14px;border-radius:var(--r);border:1px solid var(--bdr);font-size:11px;font-weight:600;color:var(--gray);background:#fff;transition:all var(--tr);}
+.btn-modal-cancel:hover{border-color:var(--ink);color:var(--ink);}
+.btn-modal-save{padding:7px 16px;border-radius:var(--r);font-size:11px;font-weight:700;background:var(--red);color:#fff;transition:background var(--tr);}
+.btn-modal-save:hover:not(:disabled){background:#b01318;}
+.btn-modal-save:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── ALERT: must select before navigating ── */
+.must-select-toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--orange);color:#fff;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:700;z-index:9999;box-shadow:var(--sh-lg);display:none;animation:slideDown .2s ease;}
+@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-8px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+
+/* ── FEEDBACK ── */
+.feedback-overlay{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);padding:14px;}
+.feedback-card{background:#fff;border-radius:14px;padding:26px 30px;width:min(500px,96vw);box-shadow:var(--sh-lg);border-top:5px solid transparent;text-align:center;transform:scale(.92);opacity:0;transition:all .22s cubic-bezier(.34,1.56,.64,1);}
+.feedback-card.show{transform:scale(1);opacity:1;}
+.feedback-card.correct-fb{border-top-color:var(--green-d);}
+.feedback-card.incorrect-fb{border-top-color:var(--red);}
+.fb-icon{font-size:34px;margin-bottom:8px;line-height:1;}
+.fb-title{font-size:17px;font-weight:800;margin-bottom:4px;}
+.fb-title.ok{color:var(--green-d);}
+.fb-title.bad{color:var(--red);}
+.fb-decision-badge{display:inline-block;background:var(--surf);border:1px solid var(--bdr);border-radius:4px;padding:3px 9px;font-size:10px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+.fb-body{font-size:12px;color:var(--gray);line-height:1.65;margin-bottom:10px;}
+.fb-wrong-detail{font-size:11px;color:#8b0000;background:#fff5f5;border:1px solid #fecaca;border-radius:var(--r);padding:9px 12px;text-align:left;margin-bottom:10px;line-height:1.6;}
+.fb-correct-ans{font-size:10px;color:var(--green-d);font-weight:700;margin-bottom:11px;}
+.fb-next-btn{padding:9px 26px;background:var(--ink);color:#fff;border-radius:var(--r);font-size:12px;font-weight:700;transition:background var(--tr);}
+.fb-next-btn:hover{background:#333;}
+
+/* Star burst */
+.star-burst{position:fixed;pointer-events:none;z-index:4000;}
+.star-burst span{position:absolute;font-size:18px;animation:burst .9s ease-out forwards;}
+@keyframes burst{0%{transform:translate(0,0) scale(0);opacity:1;}100%{transform:translate(var(--tx),var(--ty)) scale(1);opacity:0;}}
+.screen-shake{animation:shake .3s ease-out;}
+@keyframes shake{0%{transform:translateX(0);}25%{transform:translateX(-5px);}50%{transform:translateX(5px);}75%{transform:translateX(-3px);}100%{transform:translateX(0);}}
+
+/* ── RESULTS ── */
+#phase-results{display:none;flex-direction:column;min-height:100vh;}
+.results-nav{height:50px;background:var(--black);display:flex;align-items:center;padding:0 22px;flex-shrink:0;}
+.results-body{padding:16px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;}
+.results-left{flex:1;min-width:260px;display:flex;flex-direction:column;gap:10px;}
+.results-right{flex:0 0 280px;min-width:240px;}
+.score-card{background:#fff;border-radius:12px;padding:20px;border:1px solid var(--bdr);box-shadow:var(--sh);text-align:center;}
+.score-big{font-size:48px;font-weight:800;color:var(--green-d);line-height:1;}
+.score-label{font-size:10px;color:var(--gray);margin-top:3px;}
+.pass-badge{display:inline-block;margin-top:7px;padding:3px 12px;border-radius:16px;font-size:10px;font-weight:700;}
+.pass-badge.pass{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
+.pass-badge.fail{background:#fef2f2;color:var(--red);border:1px solid #fecaca;}
+.analytics-card,.telemetry-card{background:#fff;border-radius:12px;padding:14px;border:1px solid var(--bdr);box-shadow:var(--sh);}
+.analytics-card h3,.telemetry-card h3{font-size:10px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.analytics-row{display:flex;align-items:center;justify-content:space-between;font-size:9px;padding:3px 0;border-bottom:1px solid var(--surf);gap:4px;}
+.analytics-row:last-child{border-bottom:none;}
+.analytics-row .q-num{color:var(--gray);flex-shrink:0;}
+.analytics-row .decision{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.correct-mark{color:var(--green-d);font-weight:700;flex-shrink:0;}
+.wrong-mark{color:var(--red);font-weight:700;flex-shrink:0;}
+.telemetry-json{background:var(--surf);border-radius:4px;padding:7px;font-size:8px;font-family:monospace;color:var(--gray);max-height:110px;overflow-y:auto;}
+.cert-container{background:#fff;border-radius:12px;padding:14px;border:1px solid var(--bdr);box-shadow:var(--sh);}
+.cert-container h3{font-size:10px;font-weight:700;color:var(--ink);margin-bottom:9px;}
+.cert-preview{border:2px solid var(--ink);border-radius:4px;padding:16px 12px;text-align:center;font-family:Georgia,serif;margin-bottom:9px;position:relative;background:#fdfcf8;}
+.cert-preview::before{content:'';position:absolute;inset:4px;border:1px solid rgba(0,0,0,.1);pointer-events:none;}
+.cert-issuer{font-size:6px;letter-spacing:3px;color:var(--gray);text-transform:uppercase;margin-bottom:5px;}
+.cert-title{font-size:14px;font-weight:normal;color:var(--ink);font-style:italic;margin-bottom:2px;}
+.cert-subtitle{font-size:6px;letter-spacing:2px;color:var(--gray);text-transform:uppercase;margin-bottom:8px;}
+.cert-day-line{font-size:7px;color:var(--orange);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;}
+.cert-divider-line{display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:7px;}
+.cert-divider-line::before,.cert-divider-line::after{content:'';display:block;width:28px;height:1px;background:rgba(0,0,0,.16);}
+.cert-divider-line span{width:4px;height:4px;background:rgba(0,0,0,.2);transform:rotate(45deg);display:block;}
+.cert-to{font-size:6px;color:var(--gray);font-style:italic;margin-bottom:3px;}
+.cert-name{font-size:14px;font-style:italic;color:var(--ink);border-bottom:1px solid rgba(0,0,0,.16);display:inline-block;padding-bottom:2px;min-width:130px;margin-bottom:3px;}
+.cert-empid{font-size:6px;color:var(--gray);letter-spacing:.7px;margin-bottom:7px;}
+.cert-body-text{font-size:6.5px;color:var(--ink);line-height:1.65;margin-bottom:7px;max-width:180px;margin-left:auto;margin-right:auto;}
+.cert-stats-row{display:flex;justify-content:center;margin-bottom:7px;}
+.cert-stat{padding:0 8px;border-right:1px solid rgba(0,0,0,.09);}
+.cert-stat:last-child{border-right:none;}
+.cert-stat-lbl{font-size:5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);margin-bottom:2px;}
+.cert-stat-val{font-size:9px;color:var(--ink);font-weight:bold;}
+.cert-sig-line{width:90px;height:1px;background:rgba(0,0,0,.16);margin:7px auto 3px;}
+.cert-sig-name{font-size:8px;font-style:italic;color:var(--ink);}
+.cert-sig-title{font-size:5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);margin-bottom:3px;}
+.cert-foot{font-size:5px;color:rgba(0,0,0,.26);font-style:italic;}
+.btn-download-cert{width:100%;padding:8px;background:var(--ink);color:#fff;border-radius:var(--r);font-size:10px;font-weight:700;transition:background var(--tr);}
+.btn-download-cert:hover{background:#333;}
+.btn-download-cert:disabled{opacity:.45;cursor:not-allowed;}
+.btn-retake{width:100%;padding:6px;border-radius:var(--r);font-size:10px;font-weight:600;border:1.5px solid var(--bdr);color:var(--gray);background:#fff;margin-top:4px;transition:all var(--tr);}
+.btn-retake:hover{border-color:var(--ink);color:var(--ink);}
+
+/* Dark */
+body.dark{background:#111;color:#f2f2f7;}
+body.dark .ws-sidenav,body.dark .qright,body.dark .qleft-col1,body.dark .qleft-col2,body.dark .content-subnav{background:#1c1c1e;}
+body.dark .collapsible-header,body.dark .rp-section-title{background:#2c2c2e;}
+body.dark .collapsible,body.dark .rp-section,body.dark .qleft,body.dark .content-subnav{border-color:#3a3a3c;}
+body.dark .review-body-text,body.dark .comment-box,body.dark .modal-pre-comment{background:#2c2c2e;color:#f2f2f7;border-color:#3a3a3c;}
+body.dark .modal-card,body.dark .feedback-card,body.dark .score-card,body.dark .analytics-card,body.dark .telemetry-card,body.dark .cert-container{background:#1c1c1e;border-color:#3a3a3c;}
+body.dark .modal-select,body.dark .csr-select,body.dark .assign-wrap select,body.dark .rp-select-wrap select,body.dark .sidenav-field select{background:#2c2c2e;color:#f2f2f7;border-color:#3a3a3c;}
+body.dark .rp-chip{background:#2c2c2e;color:#f2f2f7;border-color:#3a3a3c;}
+body.dark .sidenav-classifier-val{background:#2c2c2e;color:#f2f2f7;border-color:#3a3a3c;}
+body.dark .nav-dropdown{background:#1c1c1e;border-color:#3a3a3c;}
+body.dark .nav-dd-check:hover{background:#2c2c2e;}
+body.dark .hist-row{border-color:#3a3a3c;}
+body.dark .queue-filter-panel{background:#2c2c2e;border-color:#3a3a3c;}
+
+/* Responsive */
+@media(max-width:1100px){.qleft{flex:0 0 75%;max-width:75%;}.qright{flex:0 0 25%;max-width:25%;}}
+@media(max-width:900px){
+  .question-area,.qleft{flex-direction:column;}
+  .qleft,.qleft-col1,.qleft-col2{flex:unset;max-width:100%;width:100%;border-right:none;border-bottom:1px solid var(--bdr);}
+  .qright{flex:unset;max-width:100%;width:100%;}
+  .ws-sidenav{width:100%;min-width:unset;flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--bdr);}
+  .sidenav-section{flex:1;min-width:130px;}
+  .ws-body{flex-direction:column;}
+}
+@media(max-width:600px){
+  .ws-navbar{gap:4px;padding:0 7px;}
+  .ws-nav-tabs{display:none;}
+  .ws-search{flex:0 0 120px;}
+  .login-card{padding:22px 16px;}
+  .onboard-card{padding:20px 16px;}
+  .onboard-grid{grid-template-columns:1fr 1fr;}
+  .results-body{flex-direction:column;}
+  .results-right{flex:unset;width:100%;min-width:unset;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ PHASE 1: LOGIN ═══ -->
+<div id="phase-login">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 240 60" width="180" height="55" xmlns="http://www.w3.org/2000/svg"><text x="0" y="46" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-weight="800" font-size="38" fill="#000">Tripadvisor</text></svg>
+    </div>
+    <h2 class="login-title">Content Moderation Training</h2>
+    <p class="login-sub">Enter your credentials to access the assessment platform.</p>
+    <div class="login-field">
+      <label>Employee ID <span style="color:var(--red)">*</span></label>
+      <input type="text" id="login-empid" placeholder="e.g. TA-10245" maxlength="20" autocomplete="off">
+      <div class="login-err" id="empid-err">Required — alphanumeric only (e.g. TA-10245)</div>
+    </div>
+    <div class="login-field">
+      <label>Full Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="login-name" placeholder="Your full name" maxlength="60" autocomplete="off">
+      <div class="login-err" id="name-err">Please enter your full name (min 2 characters)</div>
+    </div>
+    <div class="login-field">
+      <label>Select Training Day <span style="color:var(--red)">*</span></label>
+      <select id="login-day" onchange="onDayChange()">
+        <option value="">— Choose a day —</option>
+        <option value="1">Day 1 — Review Authenticity Policy</option>
+        <option value="2">Day 2 — Fraud Detection Policy</option>
+        <option value="3">Day 3 — Hate Speech &amp; Discrimination</option>
+        <option value="4">Day 4 — Privacy &amp; Personal Data</option>
+        <option value="5">Day 5 — Commercial Content Policy</option>
+        <option value="6">Day 6 — Health &amp; Safety Standards</option>
+        <option value="7">Day 7 — Threatening &amp; Violent Content</option>
+        <option value="8">Day 8 — Adult &amp; Explicit Content</option>
+        <option value="9">Day 9 — Property Fraud Patterns</option>
+        <option value="10">Day 10 — Member Fraud &amp; Bots</option>
+      </select>
+      <div class="login-err" id="day-err">Please select a training day</div>
+      <div class="day-info-box" id="day-info-box"></div>
+    </div>
+    <button class="btn-launch" id="btn-launch" disabled onclick="goOnboarding()">Launch &amp; Continue →</button>
+  </div>
+</div>
+
+<!-- ═══ PHASE 2: ONBOARDING ═══ -->
+<div id="phase-onboarding" style="display:none;flex-direction:column;min-height:100vh;">
+  <nav class="onboard-nav">
+    <svg viewBox="0 0 240 60" width="140" height="42" xmlns="http://www.w3.org/2000/svg"><text x="0" y="46" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-weight="800" font-size="32" fill="#fff">Tripadvisor</text></svg>
+  </nav>
+  <div class="onboard-body">
+    <div class="onboard-card">
+      <span class="onboard-badge">Moderator Training</span>
+      <span class="onboard-day-tag" id="onboard-day-tag">Day 1</span>
+      <h1 id="onboard-day-title">Review Authenticity Policy</h1>
+      <p class="lead" id="onboard-desc">You will be presented with 15 randomly selected reviews from the day's question bank. Each question has 5 minutes to answer.</p>
+      <div class="onboard-grid">
+        <div class="onboard-metric"><div class="val">15</div><div class="lbl">Questions (random 15 from 25+)</div></div>
+        <div class="onboard-metric"><div class="val">80%</div><div class="lbl">Required to pass</div></div>
+        <div class="onboard-metric"><div class="val">+10</div><div class="lbl">Correct decision</div></div>
+        <!-- <div class="onboard-metric"><div class="val">−10</div><div class="lbl">Wrong decision</div></div> -->
+      </div>
+      <div class="onboard-rules">
+        <h3>Assessment Rules</h3>
+        <div class="rule-row"><div class="rule-dot"></div><p><strong>5 minutes</strong> per question. You must select an action before navigating away.</p></div>
+        <div class="rule-row"><div class="rule-dot"></div><p><strong>Four decisions:</strong> Publish, Moderation Remove, Member Fraud Remove, Property Fraud Remove.</p></div>
+        <div class="rule-row"><div class="rule-dot"></div><p>For Remove decisions, select from <strong>20 reasons</strong> in a dropdown. Your moderator comment is pre-filled.</p></div>
+        <div class="rule-row"><div class="rule-dot"></div><p>15 questions are drawn <strong>randomly</strong> each session from the day's bank — reducing repetition risk.</p></div>
+        <div class="rule-row"><div class="rule-dot"></div><p>Certificate includes the <strong>Day number and Policy name</strong> upon successful completion.</p></div>
+      </div>
+      <button class="btn-begin" onclick="goWorkspace()">Begin Assessment →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PHASE 3: WORKSPACE ═══ -->
+<div id="phase-workspace" style="display:none;flex-direction:column;min-height:100vh;">
+
+  <!-- Navbar -->
+  <div class="ws-navbar" id="ws-navbar">
+    <svg viewBox="0 0 240 60" width="110" height="34" xmlns="http://www.w3.org/2000/svg"><text x="0" y="46" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-weight="800" font-size="26" fill="#fff">Tripadvisor</text></svg>
+    <div class="ws-search"><span class="ico">⌕</span><input type="text" placeholder="Search by email…"></div>
+    <!-- Sample IDs dropdown — populated dynamically from active Q bank -->
+    <select class="ws-nav-select" id="sample-ids-select" onchange="jumpToQById(this)" style="width:120px;">
+      <option value="">— Question IDs —</option>
+    </select>
+    <div class="ws-nav-tabs" style="position:relative;">
+      <button class="ws-nav-tab active" id="tab-reviews" onclick="toggleNavDropdown('reviews-dd',this)">Reviews</button>
+      <button class="ws-nav-tab" id="tab-advanced" onclick="toggleNavDropdown('advanced-dd',this)">Advanced</button>
+      <button class="ws-nav-tab" onclick="chipAlert('Search ID panel coming soon.')">Search ID</button>
+      <button class="ws-nav-tab" onclick="chipAlert('Bulk ID panel coming soon.')">Bulk ID</button>
+      <!-- Reviews dropdown -->
+      <div class="nav-dropdown" id="reviews-dd">
+        <h5>Review Types</h5>
+        <div class="nav-dd-checks" id="reviews-checks">
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Questions</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Answers</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Forum Posts</label>
+          <label class="nav-dd-check" style="background:#f0fdf4;color:#15803d;"><input type="checkbox" checked onchange="toggleNavCheck(this)"> Reviews</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Links</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Trips</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Repost</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Profile</label>
+        </div>
+      </div>
+      <!-- Advanced dropdown -->
+      <div class="nav-dropdown" id="advanced-dd" style="min-width:280px;">
+        <h5>Advanced Filters</h5>
+        <div class="nav-dd-checks" id="advanced-checks" style="grid-template-columns:1fr;">
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide Removed</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Show Fraud Only</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide Verified</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide Unverified</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide Translations</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide if Verification Sent</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide if Verification Not Sent</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Show Removed Inappropriate Only</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide Expired</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide Photo Only</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide Owner Responses</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide DaoDao</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide Third Party</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide &gt;=4</label>
+          <label class="nav-dd-check"><input type="checkbox" onchange="toggleNavCheck(this)"> Hide &lt;=3</label>
+          <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--bdr);">
+            <div style="font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Show After Date</div>
+            <input type="date" id="advanced-date-filter" style="width:100%;padding:5px 7px;border:1px solid var(--bdr);border-radius:4px;font-size:11px;color:var(--ink);background:#fff;" onchange="toggleNavCheck(this)">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ws-nav-right">
+      <span class="ws-qnum" id="ws-qnum">Q 1 / 15</span>
+      <div class="ws-score-badge" id="ws-score">Score: 0</div>
+      <div class="ws-timer-badge" id="ws-timer">5:00</div>
+      <button class="dark-btn" onclick="toggleDark()">☾ Dark</button>
+    </div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="ws-progress" style="width:2%"></div></div>
+
+  <!-- must-select toast -->
+  <div class="must-select-toast" id="must-select-toast">⚠ Please read the review and select an action from the right panel before navigating.</div>
+
+  <div class="ws-body">
+    <!-- Sidenav -->
+    <div class="ws-sidenav">
+      <div class="sidenav-section">
+        <div class="sidenav-section-title">Language</div>
+        <div class="sidenav-field">
+          <select id="lang-select" onchange="translateReview(this.value)">
+            <option>English</option><option>Spanish</option><option>French</option><option>German</option>
+            <option>Italian</option><option>Portuguese</option><option>Dutch</option><option>Russian</option>
+            <option>Chinese (Simplified)</option><option>Chinese (Traditional)</option><option>Japanese</option>
+            <option>Korean</option><option>Arabic</option><option>Hindi</option><option>Bengali</option>
+            <option>Turkish</option><option>Polish</option><option>Swedish</option><option>Norwegian</option>
+            <option>Danish</option><option>Finnish</option><option>Greek</option><option>Czech</option>
+            <option>Romanian</option><option>Hungarian</option><option>Thai</option><option>Vietnamese</option>
+            <option>Indonesian</option><option>Malay</option><option>Swahili</option>
+          </select>
+        </div>
+      </div>
+      <div class="sidenav-section">
+        <div class="sidenav-section-title">Provider</div>
+        <div class="sidenav-field">
+          <select>
+            <option>All</option>
+            <option>Tripadvisor</option>
+            <option>Expedia</option>
+            <option>Viator</option>
+          </select>
+        </div>
+      </div>
+      <div class="sidenav-section">
+        <div class="sidenav-section-title">Classifier</div>
+        <div class="sidenav-field">
+          <div class="sidenav-classifier-val" id="classifier-val">—</div>
+        </div>
+      </div>
+      <div class="sidenav-section">
+        <div class="sidenav-section-title">Queue</div>
+        <div class="sidenav-tabs">
+          <button class="sidenav-tab active" id="tab-incoming" onclick="switchQueue('incoming',this)">Incoming</button>
+          <button class="sidenav-tab" id="tab-reported" onclick="switchQueue('reported',this)">Reported</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="ws-content">
+      <div class="content-subnav">
+        <span class="ta-logo-sm">Tripadvisor</span>
+        <div class="reviewer-id-badge" id="sub-reviewer-id">Reviewer: —</div>
+        <div class="search-id-wrap"><span>REV →</span><strong id="sub-url-id">00001</strong></div>
+        <div class="queue-mode-badge" id="queue-mode-badge" style="background:#e8f5e9;color:#15803d;border:1px solid #bbf7d0;">Incoming</div>
+        <div class="day-mode-badge" id="day-mode-badge">Day 1</div>
+        <div class="subnav-arrows">
+          <button class="arrow-btn" id="btn-prev" onclick="prevQ()" disabled>←</button>
+          <button class="arrow-btn" id="btn-next" onclick="nextQManual()">→</button>
+        </div>
+      </div>
+
+      <div class="question-area">
+        <!-- LEFT 80% -->
+        <div class="qleft">
+          <!-- COL 1 -->
+          <div class="qleft-col1">
+            <div class="collapsible">
+              <div class="collapsible-header" onclick="toggleSec('reviewer')"><h4>Reviewer Info</h4><div class="toggle-btn" id="toggle-reviewer">−</div></div>
+              <div class="collapsible-body" id="body-reviewer"><div class="info-grid" id="reviewer-data"></div></div>
+            </div>
+            <div class="collapsible">
+              <div class="collapsible-header" onclick="toggleSec('karma')"><h4>Member Karma</h4><div class="toggle-btn" id="toggle-karma">−</div></div>
+              <div class="collapsible-body" id="body-karma"></div>
+            </div>
+            <div class="collapsible">
+              <div class="collapsible-header" onclick="toggleSec('device')"><h4>Device &amp; Technical</h4><div class="toggle-btn" id="toggle-device">−</div></div>
+              <div class="collapsible-body" id="body-device"><div class="info-grid" id="device-data"></div></div>
+            </div>
+            <!-- MEMBER HISTORY (req #7) -->
+            <div class="collapsible">
+              <div class="collapsible-header" onclick="toggleSec('memhist-same-member')"><h4>Member Reviews</h4><div class="toggle-btn" id="toggle-memhist-same-member">+</div></div>
+              <div class="collapsible-body closed" id="body-memhist-same-member"></div>
+            </div>
+            <div class="collapsible">
+              <div class="collapsible-header" onclick="toggleSec('memhist-same-ip')"><h4>Same IP Reviews</h4><div class="toggle-btn" id="toggle-memhist-same-ip">+</div></div>
+              <div class="collapsible-body closed" id="body-memhist-same-ip"></div>
+            </div>
+            <div class="collapsible">
+              <div class="collapsible-header" onclick="toggleSec('memhist-same-cookie')"><h4>Same Cookie Reviews</h4><div class="toggle-btn" id="toggle-memhist-same-cookie">+</div></div>
+              <div class="collapsible-body closed" id="body-memhist-same-cookie"></div>
+            </div>
+            <div class="collapsible">
+              <div class="collapsible-header" onclick="toggleSec('memhist-fingerprint')"><h4>Same Fingerprint Reviews</h4><div class="toggle-btn" id="toggle-memhist-fingerprint">+</div></div>
+              <div class="collapsible-body closed" id="body-memhist-fingerprint"></div>
+            </div>
+            <div class="collapsible">
+              <div class="collapsible-header" onclick="toggleSec('memhist-verification')"><h4>Same Verification Reviews</h4><div class="toggle-btn" id="toggle-memhist-verification">+</div></div>
+              <div class="collapsible-body closed" id="body-memhist-verification"></div>
+            </div>
+          </div>
+
+          <!-- COL 2 -->
+          <div class="qleft-col2">
+            <div class="collapsible">
+              <div class="collapsible-header" onclick="toggleSec('revinfo')"><h4>Review Info</h4><div class="toggle-btn" id="toggle-revinfo">−</div></div>
+              <div class="collapsible-body" id="body-revinfo"></div>
+            </div>
+            <div class="collapsible">
+              <div class="collapsible-header" onclick="toggleSec('locflight')"><h4>Location / Flight / Product</h4><div class="toggle-btn" id="toggle-locflight">−</div></div>
+              <div class="collapsible-body" id="body-locflight"><div class="info-grid" id="locflight-data"></div></div>
+            </div>
+            <div>
+              <div class="review-header-row">
+                <span>Review Content</span>
+                <select class="lang-select-sm" onchange="translateReview(this.value)">
+                  <option>English</option><option>Spanish</option><option>French</option><option>German</option><option>Italian</option><option>Portuguese</option>
+                </select>
+              </div>
+              <div class="review-title-text" id="review-title-text"></div>
+              <div class="review-body-text" id="review-body-text"></div>
+              <div class="comment-label" id="owner-review-label" style="display:none;">Owner Response <span id="owner-review-badge" style="font-size:8px;font-weight:600;background:#f3e8ff;color:#7B2D8B;border:1px solid #d8b4fe;border-radius:10px;padding:1px 7px;letter-spacing:.3px;margin-left:5px;">Property submitted</span></div>
+              <textarea class="comment-box" id="owner-review" placeholder="Property owner response — e.g. 'We have no record of this guest', 'This reviewer was removed from the property for misconduct', 'This appears to be a bot account'…" style="display:none;border-color:#8E44AD;background:#fdf8ff;min-height:58px;font-size:10px;line-height:1.6;color:#4a2060;"></textarea>
+              <div class="comment-label">Moderator Comment</div>
+              <textarea class="comment-box" id="mod-comment" placeholder="Add your moderation comment here…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT 20% -->
+        <div class="qright">
+          <!-- Queue & Assign -->
+          <div class="rp-section">
+            <div class="rp-section-title">Queue &amp; Assign</div>
+            <div class="rp-body">
+              <div class="queue-tabs">
+                <button class="queue-tab active" onclick="toggleQueueTabPanel(this,'queue-filter')">Queue</button>
+                <button class="queue-tab" onclick="toggleQueueTabPanel(this,'assign-filter')">Assign</button>
+              </div>
+              <!-- Queue filter checkboxes (req #9) -->
+              <div class="queue-filter-panel" id="queue-filter">
+                <h6>Select Queue</h6>
+                <label class="qf-check"><input type="checkbox"> 2ndop-cmi-svc</label>
+                <label class="qf-check"><input type="checkbox"> bugs-svc</label>
+                <label class="qf-check"><input type="checkbox"> cmit_escalations-svc</label>
+                <label class="qf-check"><input type="checkbox"> fakelisting-svc</label>
+                <label class="qf-check"><input type="checkbox"> fs_tier2-svc</label>
+                <label class="qf-check"><input type="checkbox"> gdpr-svc</label>
+                <label class="qf-check"><input type="checkbox"> listingrequests-svc</label>
+                <label class="qf-check"><input type="checkbox"> mgmt_esc-svc</label>
+                <label class="qf-check"><input type="checkbox"> onshore-cmi-svc</label>
+                <label class="qf-check"><input type="checkbox"> onshore-vr-svc</label>
+                <label class="qf-check"><input type="checkbox"> reviewbombs-svc</label>
+                <label class="qf-check"><input type="checkbox"> serious_alleg-svc</label>
+                <label class="qf-check"><input type="checkbox"> shiqueue-svc</label>
+                <label class="qf-check"><input type="checkbox"> supportstaff-cmi-svc</label>
+                <label class="qf-check"><input type="checkbox"> ts_moderation-svc</label>
+                <label class="qf-check"><input type="checkbox"> aabdelbary</label>
+                <label class="qf-check"><input type="checkbox"> aabdelghani</label>
+                <label class="qf-check"><input type="checkbox"> aanjali</label>
+                <label class="qf-check"><input type="checkbox"> abakke</label>
+              </div>
+              <div class="queue-filter-panel" id="assign-filter">
+                <div class="assign-wrap">
+                  <label>Assign To Team</label>
+                  <select>
+                    <option>— Select Team —</option>
+                    <option>Trust &amp; Safety Alpha</option><option>Trust &amp; Safety Beta</option>
+                    <option>APAC Moderators</option><option>EMEA Moderators</option>
+                    <option>Americas Team</option><option>Fraud Detection Unit</option>
+                    <option>Senior Review Board</option><option>Quality Assurance</option>
+                    <option>Escalation Desk</option><option>Legal &amp; Compliance</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions (right panel — only place for action buttons) -->
+          <div class="rp-section">
+            <div class="rp-section-title">Actions</div>
+            <div class="rp-body">
+              <div class="right-action-btns" id="right-action-btns">
+                <button class="right-btn pub" onclick="submitDecision('publish')">Publish</button>
+                <button class="right-btn mod" onclick="openReasonModal('moderation_remove')">Moderation Remove</button>
+                <button class="right-btn mem" onclick="openReasonModal('member_fraud')">Member Fraud Remove</button>
+                <button class="right-btn prop" onclick="openReasonModal('property_fraud')">Property Fraud Remove</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Photos -->
+          <div class="rp-section">
+            <div class="rp-section-title">Photos</div>
+            <div class="rp-chip-group">
+              <button class="rp-chip" onclick="chipAlert('Owner photo panel opened.')">Owner Photo</button>
+              <button class="rp-chip" onclick="chipAlert('Attach photo dialog opened.')">Attach Photo</button>
+            </div>
+          </div>
+
+          <!-- Verify -->
+          <div class="rp-section">
+            <div class="rp-section-title">Verify</div>
+            <div class="rp-chip-group">
+              <button class="rp-chip blue" onclick="chipAlert('Verification started.')">Verify</button>
+              <button class="rp-chip blue" onclick="chipAlert('Suspicious verify queued.')">Susp. Verify</button>
+              <button class="rp-chip blue" onclick="chipAlert('Member verify started.')">Member Verify</button>
+              <button class="rp-chip blue" onclick="chipAlert('Incentive survey sent.')">Incentive Survey</button>
+              <button class="rp-chip blue" onclick="chipAlert('Attachment analysis running.')">Check Attachment</button>
+            </div>
+          </div>
+
+          <!-- Helpful Links — Google search by email (req #8) -->
+          <div class="rp-section">
+            <div class="rp-section-title">Helpful Links</div>
+            <div class="rp-select-wrap">
+              <select onchange="openHelpfulLink(this)">
+                <option value="">— Select a link —</option>
+                <option value="__google_display__">Google: Display Name</option>
+                <option value="__google_subject__">Google: Subject Search</option>
+                <option value="__google_email__">Google: Email Search</option>
+                <option value="https://www.tripadvisor.com/help">Tripadvisor Help Center</option>
+                <option value="https://www.tripadvisor.com/help/review-policy">Review Policy</option>
+                <option value="https://www.tripadvisor.com/help/fraud-policy">Fraud Guidelines</option>
+                <option value="https://www.tripadvisor.com/help/privacy">Privacy Policy</option>
+                <option value="https://www.tripadvisor.com/help/content-guidelines">Content Guidelines</option>
+              </select>
+            </div>
+            <div class="rp-label">Email Templates</div>
+            <div class="rp-email-list">
+              <div class="rp-email-item" onclick="chipAlert('Review Removed Notice copied.')">Review Removed Notice</div>
+              <div class="rp-email-item" onclick="chipAlert('Fraud Warning template copied.')">Fraud Warning</div>
+              <div class="rp-email-item" onclick="chipAlert('Policy Violation Alert copied.')">Policy Violation Alert</div>
+              <div class="rp-email-item" onclick="chipAlert('Account Review Initiated copied.')">Account Review Initiated</div>
+            </div>
+          </div>
+
+          <!-- Content Safety Report -->
+          <div class="rp-section">
+            <div class="rp-section-title">Content Safety Report</div>
+            <div class="csr-body">
+              <select class="csr-select"><option>Incident Category</option><option>Hate Speech</option><option>Graphic Violence</option><option>Adult Content</option><option>Fraud / Scam</option><option>Privacy Violation</option><option>Spam</option><option>Misinformation</option></select>
+              <select class="csr-select"><option>Incident Type</option><option>Single Post</option><option>Repeat Offence</option><option>Coordinated Attack</option><option>Bot Activity</option><option>Impersonation</option></select>
+              <select class="csr-select"><option>Reporter Relation to Victim</option><option>Self</option><option>Family Member</option><option>Friend</option><option>Colleague</option><option>Unknown</option></select>
+              <select class="csr-select"><option>Accused Relation to Business</option><option>Owner / Manager</option><option>Staff</option><option>Competitor</option><option>Customer</option><option>Unknown</option></select>
+              <div class="csr-checks">
+                <label class="csr-check"><input type="checkbox"> Display alert on review</label>
+                <label class="csr-check"><input type="checkbox"> Disqualify property</label>
+              </div>
+              <button class="csr-submit" onclick="chipAlert('Content safety report submitted.')">Submit Report</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: REASON ═══ -->
+<div class="modal-overlay hidden" id="reason-modal">
+  <div class="modal-card">
+    <h3 id="modal-title">Select Removal Reason</h3>
+    <p class="modal-sub">Select the primary reason (required). Your moderator comment is pre-filled below.</p>
+    <select class="modal-select" id="modal-reason-select" onchange="onReasonChange(this)">
+      <option value="">— Select a reason (required) —</option>
+    </select>
+    <div class="modal-comment-lbl">Moderator Comment (pre-filled)</div>
+    <div class="modal-pre-comment" id="modal-pre-comment">No comment entered.</div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-modal-save" id="btn-modal-save" disabled onclick="saveReason()">Save &amp; Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FEEDBACK ═══ -->
+<div class="feedback-overlay hidden" id="feedback-overlay">
+  <div class="feedback-card" id="feedback-card">
+    <div class="fb-icon" id="fb-icon"></div>
+    <div class="fb-title" id="fb-title"></div>
+    <div class="fb-decision-badge" id="fb-badge"></div>
+    <div class="fb-body" id="fb-body"></div>
+    <div class="fb-wrong-detail hidden" id="fb-wrong-detail"></div>
+    <div class="fb-correct-ans" id="fb-correct"></div>
+    <button class="fb-next-btn" onclick="advanceQuestion()">Next Review →</button>
+  </div>
+</div>
+<div class="star-burst hidden" id="star-burst"></div>
+
+<!-- ═══ PHASE 4: RESULTS ═══ -->
+<div id="phase-results" style="display:none;flex-direction:column;min-height:100vh;">
+  <div class="results-nav">
+    <svg viewBox="0 0 240 60" width="140" height="42" xmlns="http://www.w3.org/2000/svg"><text x="0" y="46" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-weight="800" font-size="32" fill="#fff">Tripadvisor</text></svg>
+  </div>
+  <div class="results-body">
+    <div class="results-left">
+      <div class="score-card">
+        <div class="score-big" id="final-score-num">0</div>
+        <div class="score-label">Final Score</div>
+        <div class="pass-badge" id="pass-badge">—</div>
+        <div style="font-size:9px;color:var(--gray);margin-top:7px;" id="final-summary"></div>
+      </div>
+      <div class="analytics-card"><h3>Review Analytics — Decision Log</h3><div id="analytics-rows"></div></div>
+      <!-- <div class="telemetry-card"><h3>Session Telemetry (JSON)</h3><div class="telemetry-json" id="telemetry-json"></div></div> -->
+    </div>
+    <div class="results-right">
+      <div class="cert-container">
+        <h3>Certificate of Completion</h3>
+        <div class="cert-preview">
+          <div class="cert-issuer">Sutherland Trust &amp; Safety &nbsp;·&nbsp; Tripadvisor</div>
+          <div class="cert-title">Certificate of Completion</div>
+          <div class="cert-subtitle">Content Moderation Training</div>
+          <div class="cert-day-line" id="cert-day-line">Day 1 — Review Authenticity Policy</div>
+          <div class="cert-divider-line"><span></span></div>
+          <div class="cert-to">This is to certify that</div>
+          <div class="cert-name" id="cert-name-preview">—</div>
+          <div class="cert-empid" id="cert-empid-preview">Employee ID: —</div>
+          <div class="cert-body-text">has successfully completed all modules of the Tripadvisor Content Moderation Training and demonstrated proficiency in evaluating user-generated content.</div>
+          <div class="cert-stats-row">
+            <div class="cert-stat"><div class="cert-stat-lbl">Score</div><div class="cert-stat-val" id="cert-score-val">—</div></div>
+            <div class="cert-stat"><div class="cert-stat-lbl">Questions</div><div class="cert-stat-val">15</div></div>
+            <div class="cert-stat"><div class="cert-stat-lbl">Date</div><div class="cert-stat-val" id="cert-date-val">—</div></div>
+          </div>
+          <div class="cert-sig-line"></div>
+          <div class="cert-sig-name">Sutherland Trust &amp; Safety</div>
+          <div class="cert-sig-title">Training Evaluator</div>
+          <div class="cert-foot">Verified · Authentic Certificate of Completion</div>
+        </div>
+        <button class="btn-download-cert" id="btn-dl-cert" onclick="downloadCert()">Download Certificate (PDF)</button>
+        <button class="btn-retake" onclick="retake()">Retake Assessment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════
+   DAY DEFINITIONS
+   Each day has a policy name, description, and 25-30 question IDs
+   drawn from FULL_BANK. Random 15 are served per session.
+════════════════════════════════════════════════════════ */
+const DAYS = {
+  1:{name:'Review Authenticity Policy',desc:'Evaluate whether hotel and travel reviews are genuine, specific, and unmanipulated — distinguishing real experience from template or bot-generated content.',ids:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,18,19,20,35,42,49,56,57,63,101,102,103,104,105]},
+  2:{name:'Fraud Detection Policy',desc:'Identify incentivised reviews, sockpuppet networks, and coordinated fake review schemes designed to manipulate platform ratings.',ids:[23,27,34,38,41,52,53,67,77,87,93,99,126,127,128,129,130,34,38,52,53,67,77,87,93,99]},
+  3:{name:'Hate Speech & Discrimination',desc:'Detect and action reviews containing racist, xenophobic, or discriminatory language targeting individuals or groups.',ids:[33,69,24,85,30,37,55,95,40,28,32,62,97,21,43,47,65,70,78,84,113,69,33,35,91]},
+  4:{name:'Privacy & Personal Data',desc:'Remove content exposing private information, home addresses, phone numbers, or doxxing of individuals associated with a property.',ids:[28,55,95,32,40,37,85,21,30,62,97,33,24,43,53,67,77,87,93,15,20,56,74,84,91]},
+  5:{name:'Commercial Content Policy',desc:'Identify spam, promotional content, affiliate links, external URLs, and content designed to divert users away from the platform.',ids:[22,29,44,54,60,64,71,83,36,58,75,61,63,65,68,107,109,125,110,111,83,22,29,44,54]},
+  6:{name:'Health & Safety Standards',desc:'Evaluate reviews reporting health hazards, hygiene failures, food safety violations, and physical safety concerns at properties.',ids:[14,35,74,84,55,40,37,30,21,28,32,43,47,56,59,65,78,82,92,94,96,98,97,1,51]},
+  7:{name:'Threatening & Violent Content',desc:'Identify content containing threats, intimidation, extortion attempts, or descriptions of violence toward staff or property owners.',ids:[25,30,85,89,75,36,58,21,55,95,39,28,33,37,69,40,62,97,118,122,43,47,65,70,91]},
+  8:{name:'Adult & Explicit Content',desc:'Action reviews containing sexually explicit, graphic, adult, or highly inappropriate content that violates platform community standards.',ids:[24,37,40,33,55,85,28,95,30,21,62,97,32,43,47,65,70,84,78,92,96,94,14,35,91]},
+  9:{name:'Property Fraud Patterns',desc:'Detect property-owner manipulation including fake positive reviews, coercion of guests, competitor attacks, and incentivised review schemes.',ids:[23,27,34,38,39,52,53,67,77,87,93,99,126,127,128,129,130,34,38,39,52,53,67,77,87]},
+  10:{name:'Member Fraud & Bots',desc:'Identify bot accounts, member impersonation, coordinated review bombs, phishing attempts, and systematic platform abuse patterns.',ids:[22,25,29,36,44,54,58,60,64,71,73,75,79,81,83,89,118,119,120,121,122,123,124,125,60]},
+};
+
+/* ════════════════════════════════════════════════════════
+   FULL QUESTION BANK (100 questions — same as v2)
+════════════════════════════════════════════════════════ */
+const FULL_BANK = [
+  {id:1,rIdx:0,title:"Stunning Views from Every Room",body:"Absolutely loved our stay at the Grand Marina Hotel. The views of the bay were breathtaking, breakfast was superb with fresh local produce, and the staff went above and beyond. Highly recommend!",correct:'publish',expl:"Genuine, detailed positive review with specific mentions. Publish.",wrongExpl:"This is an authentic review with specific details about the property. No commercial links, no spam, no hate speech — publishing is correct. Removing or flagging genuine reviews undermines the platform's integrity and harms both the reviewer and the property.",rating:5,prop:"Grand Marina Hotel",exp:"Hotels",date:"2024-01-15"},
+  {id:2,rIdx:1,title:"Perfect romantic getaway",body:"My partner and I celebrated our anniversary here. The ocean-view suite was perfect — candle-lit dinner arranged by staff without us asking. Every detail was taken care of. Will definitely return!",correct:'publish',expl:"A genuine and detailed positive review. Publish.",wrongExpl:"This is an authentic guest experience with specific emotional details and named amenities. Nothing in Tripadvisor's guidelines prohibits enthusiastic positive reviews. Removing it would wrongly suppress genuine traveller feedback.",rating:5,prop:"Seaside Bliss Resort",exp:"Hotels",date:"2024-02-01"},
+  {id:3,rIdx:2,title:"Decent hotel but overpriced",body:"The hotel was clean and the location was great but pricing was steep for what you get. Breakfast was average, pool smaller than advertised. Would maybe return if prices dropped. Staff were friendly.",correct:'publish',expl:"A balanced honest review about value. Publish — useful feedback.",wrongExpl:"Value criticism is legitimate traveller feedback. Removing reviews that express disappointment with pricing would damage Tripadvisor's reputation for impartial reviews and violates platform policy.",rating:3,prop:"Midtown Suites",exp:"Hotels",date:"2024-02-10"},
+  {id:4,rIdx:3,title:"Family favourite for years",body:"We have been coming to this hotel for seven years and every stay is better than the last. The kids club is exceptional, meals consistently delicious, staff remember our names. Like visiting old friends.",correct:'publish',expl:"Heartfelt detailed long-term guest review. Authentic and valuable. Publish.",wrongExpl:"Long-term repeat guests are among the most credible reviewers on the platform. This contains specific named facilities and personal connection. Removing it would be a serious moderation error.",rating:5,prop:"Coral Bay Family Resort",exp:"Hotels",date:"2024-03-01"},
+  {id:5,rIdx:4,title:"Exceptional spa experience",body:"Booked the weekend spa package and it exceeded every expectation. Therapists were knowledgeable, facilities immaculate, healthy menu options delicious. Felt completely rejuvenated. Worth every penny.",correct:'publish',expl:"Genuine detailed positive review focused on spa experience. Publish.",wrongExpl:"Specific spa reviews with named service categories are valuable niche content. No violations of any kind are present in this review.",rating:5,prop:"Zenith Wellness Retreat",exp:"Hotels",date:"2024-03-10"},
+  {id:6,rIdx:5,title:"Lovely budget option",body:"Surprised by how much value this guesthouse offers. Rooms compact but spotlessly clean, hosts warm and the included breakfast generous. Perfect if you are watching your budget without sacrificing comfort.",correct:'publish',expl:"Genuine helpful budget review. Publish to help price-conscious travellers.",wrongExpl:"Budget travel reviews are important for a wide segment of Tripadvisor's audience. No violations present. Publishing is the only correct action.",rating:4,prop:"Green Door Guesthouse",exp:"Hotels",date:"2024-04-01"},
+  {id:7,rIdx:6,title:"Conference facilities top-notch",body:"Hosted our annual sales conference here and everything was perfectly organised. AV equipment state of the art, catering excellent, event coordinator exceptional. Our delegates were very impressed.",correct:'publish',expl:"Detailed B2B review of conference facilities — authentic and useful. Publish.",wrongExpl:"Business travel and corporate event reviews are a core content type. This contains specific service observations relevant to meeting planners. No policy violations.",rating:5,prop:"Metropolitan Conference Centre",exp:"Hotels",date:"2024-04-10"},
+  {id:8,rIdx:7,title:"Great for families with young kids",body:"Travelled with three kids under seven and this resort was perfectly equipped. Splash park brilliant, kids eat free under twelve, childcare service superb and our room connected to my parents' suite seamlessly.",correct:'publish',expl:"Detailed family travel review with specific useful information. Publish.",wrongExpl:"Family reviews with specific childcare details are highly valued. Removing it would incorrectly suppress important content for families planning trips.",rating:5,prop:"Sunshine Family Resort",exp:"Hotels",date:"2024-06-01"},
+  {id:9,rIdx:8,title:"Solo female travel — felt very safe",body:"As a solo female traveller, safety is my top priority. Excellent security, well-lit corridors, a safe in every room and the reception team always available. Would highly recommend to other solo female travellers.",correct:'publish',expl:"Valuable niche review for solo female travellers. Specific, genuine and very helpful. Publish.",wrongExpl:"Niche traveller safety reviews address an underserved audience. This is exactly the content Tripadvisor wants. No violations of any kind.",rating:5,prop:"The Haven Hotel",exp:"Hotels",date:"2024-06-15"},
+  {id:10,rIdx:9,title:"Perfect business trip base",body:"Ideally located for the CBD, fast WiFi, comfortable workstation in the room and excellent breakfast. The concierge sorted all my restaurant bookings flawlessly. A reliable choice for business travel.",correct:'publish',expl:"Detailed genuine business travel review. Publish.",wrongExpl:"Business travel reviews with specific amenity details are extremely useful for corporate travellers. No policy violations present.",rating:4,prop:"The Executive Suites",exp:"Hotels",date:"2024-05-01"},
+  {id:11,rIdx:0,title:"Consistently excellent — fourth visit",body:"Our fourth visit to this remarkable property and standards remain impeccable. New spa facilities have elevated it further. The attention to detail is second to none. Already looking forward to our fifth visit.",correct:'publish',expl:"Genuine experienced repeat-guest review. Very valuable signal. Publish.",wrongExpl:"Repeat guest reviews are among the highest-credibility signals on the platform. They demonstrate consistent quality over time and are invaluable to future guests.",rating:5,prop:"Grandeur Palace Hotel",exp:"Hotels",date:"2024-07-25"},
+  {id:12,rIdx:1,title:"Wonderful honeymoon suite",body:"Every detail of our honeymoon suite was perfection — rose petals on arrival, champagne chilled, private terrace with ocean views, most luxurious bed ever. Staff somehow made it even more special.",correct:'publish',expl:"Detailed genuine honeymoon review. Very useful for couples. Publish.",wrongExpl:"Honeymoon and special occasion reviews are highly valued niche content. The emotional detail and specific amenity mentions confirm authenticity.",rating:5,prop:"Azure Honeymoon Villas",exp:"Hotels",date:"2024-05-20"},
+  {id:13,rIdx:2,title:"Great food, terrible service",body:"The restaurant within the hotel served some of the best pasta I have had in years. However, the reception team was dismissive and we waited 40 minutes to check in with no apology offered. Mixed feelings overall.",correct:'publish',expl:"Genuine mixed review with specific details. Useful for future guests. Publish.",wrongExpl:"Mixed reviews that highlight both strengths and weaknesses are the most credible type. Removing negative but specific feedback would violate platform integrity principles.",rating:3,prop:"Bella Vista Hotel",exp:"Hotels",date:"2024-02-18"},
+  {id:14,rIdx:3,title:"Health hazard conditions",body:"Swimming pool water was visibly green and cloudy. When we raised it with reception they said 'it's always like that.' I also noticed mould throughout our room. Filed a formal complaint with local health authorities.",correct:'publish',expl:"Genuine complaint about health and safety. Important information for future guests. Publish.",wrongExpl:"Health and safety complaints are essential public safety information. Even if the property disputes the claim, this is a genuine first-person account with specific details that future guests need to know.",rating:1,prop:"Aqua Beach Hotel",exp:"Hotels",date:"2024-05-05"},
+  {id:15,rIdx:4,title:"Disappointing for the price",body:"At this price point you expect a certain standard. Rooms showed their age, gym equipment broken, dinner reservation lost despite confirmation. The view was the only saving grace.",correct:'publish',expl:"Legitimate negative review with specific, detailed complaints. Publish.",wrongExpl:"Critical reviews with specific complaints about broken facilities and staff failures are legitimate feedback. Publishing them enables quality improvement and protects future guests.",rating:2,prop:"The Grand Regent",exp:"Hotels",date:"2024-04-20"},
+  {id:16,rIdx:5,title:"Accessible travel — wheelchair friendly",body:"Travelling with my husband who uses a wheelchair was made so easy at this resort. Ramp access throughout, roll-in shower in adapted room, pool hoist available and staff trained in disability assistance. Genuinely inclusive.",correct:'publish',expl:"Extremely valuable accessibility review for disabled travellers. Publish immediately.",wrongExpl:"Accessibility reviews are among the most critical content on the platform. Disabled travellers depend on this information for trip planning. No policy violation of any kind.",rating:5,prop:"Inclusive Beach Resort",exp:"Hotels",date:"2024-08-05"},
+  {id:17,rIdx:6,title:"Room was fine, nothing special",body:"Everything was exactly as described — clean, adequate size, good location near the airport. No surprises good or bad. Exactly what you expect from a business airport hotel. Did the job.",correct:'publish',expl:"A neutral review with accurate descriptions. Publish.",wrongExpl:"Neutral reviews that confirm advertised standards are useful for expectation-setting. Removing them would skew the rating profile of properties unfairly.",rating:3,prop:"Airport Transit Inn",exp:"Hotels",date:"2024-08-10"},
+  {id:18,rIdx:7,title:"Fresh seafood, beautiful terrace",body:"The hotel restaurant overlooks the marina and the lobster thermidor was the finest I have had in twenty years of dining. Paired beautifully with their house white. Service attentive without being intrusive.",correct:'publish',expl:"Detailed restaurant review within a hotel. Genuine and useful. Publish.",wrongExpl:"Hotel restaurant reviews with specific dish and service observations are highly valued. No policy violations.",rating:5,prop:"The Marina Grand Hotel",exp:"Hotels",date:"2024-09-10"},
+  {id:19,rIdx:8,title:"Anniversary surprise — hotel delivered",body:"Called ahead to arrange anniversary decorations. On arrival the room was transformed — balloons, rose petals, personalised card from the manager and a bottle of bubbly. My wife cried happy tears. Unforgettable.",correct:'publish',expl:"Heartfelt genuine review of special occasion service. Publish.",wrongExpl:"Reviews of special occasion service demonstrate hotel concierge quality. This is authentic emotional content with specific details — exactly what Tripadvisor wants published.",rating:5,prop:"The Romance Hotel",exp:"Hotels",date:"2024-09-20"},
+  {id:20,rIdx:9,title:"AI generated hotel photos misleading",body:"Every photo on the Tripadvisor listing appears to be AI-generated or heavily edited. Actual rooms were dark, small and nothing like the images. This is false advertising and I want my money back.",correct:'publish',expl:"Legitimate complaint about misleading photography. Genuine and useful warning. Publish.",wrongExpl:"Consumer warnings about misleading marketing are important protective content. This is a specific, credible complaint that helps future guests make informed decisions.",rating:1,prop:"Pixel Perfect Hotel",exp:"Hotels",date:"2024-08-20"},
+  {id:21,rIdx:0,title:"Worst experience — lawsuit pending",body:"NEVER STAY HERE. The owner threatened us when we asked for a refund. Staff was rude and rooms were infested. I am suing them and everyone should be warned. Contact me at mybadexperience@fake.com to join the lawsuit.",correct:'moderation_remove',expl:"Contains personal contact information and litigation solicitation — violates guidelines. Moderation Remove.",wrongExpl:"Publishing this review would expose Tripadvisor to legal risk: it contains a personal email address, invites third parties to join a lawsuit, and solicits off-platform contact. All three elements independently violate the content policy.",rating:1,prop:"Budget Inn Riverside",exp:"Hotels",date:"2024-01-20"},
+  {id:22,rIdx:1,title:"GREAT DEALS — BOOK NOW",body:"Best prices online guaranteed! Visit www.cheaphotels-scam.net for exclusive deals. Use promo code SAVE50 for 50% off! Contact us directly at +1-800-FAKE-NUM. Don't book through Tripadvisor!",correct:'member_fraud',expl:"Commercial spam with external links and diversion from Tripadvisor. Member Fraud Remove is correct.",wrongExpl:"This is not a review — it is commercial spam posted by a member to divert bookings from Tripadvisor to an external site. The external URL, promo code, phone number, and anti-Tripadvisor messaging confirm Member Fraud.",rating:5,prop:"Various Hotels",exp:"Hotels",date:"2024-02-05"},
+  {id:23,rIdx:2,title:"This hotel paid me to write this",body:"I was offered a free night stay in exchange for a 5-star review. So here it is — five stars! Amazing place, best hotel ever, no complaints at all whatsoever.",correct:'property_fraud',expl:"Reviewer explicitly discloses receiving compensation — Property Fraud Remove.",wrongExpl:"The reviewer explicitly admits the hotel offered a free night in exchange for a positive review. This is Property Fraud by definition — the property has orchestrated an incentivised review in direct violation of Tripadvisor's guidelines.",rating:5,prop:"Skyline Grand",exp:"Hotels",date:"2024-02-14"},
+  {id:24,rIdx:3,title:"Adult content at pool area",body:"We had a great time but I must warn families — the pool area late at night becomes an adult-only zone with very inappropriate activities in plain sight including nudity and explicit behaviour.",correct:'moderation_remove',expl:"Contains description of explicit adult activities in a public area — Moderation Remove for graphic content.",wrongExpl:"While the intent may be to warn families, the explicit description of adult activities and nudity in a public space violates content guidelines. The information could be conveyed without graphic detail — as written it requires Moderation Remove.",rating:2,prop:"Sunset Palms Resort",exp:"Hotels",date:"2024-02-22"},
+  {id:25,rIdx:4,title:"I will destroy this business",body:"If the manager does not refund me within 48 hours I will ensure this place gets 1-star reviews across every platform from me and my 500 followers. I know where you are located and I am not done with you.",correct:'member_fraud',expl:"Contains threats and coordinated attack declaration — Member Fraud Remove.",wrongExpl:"This is explicit extortion: the member is threatening coordinated fake reviews across platforms unless demands are met. The phrase 'I know where you are located' also constitutes a threatening statement. Both elements confirm Member Fraud.",rating:1,prop:"Harbor View Inn",exp:"Hotels",date:"2024-03-05"},
+  {id:26,rIdx:5,title:"Copied word for word",body:"Amazing hotel, beautiful views, friendly staff, great location, excellent breakfast, would highly recommend, clean rooms, perfect service, wonderful experience, definitely returning.",correct:'moderation_remove',expl:"Suspiciously generic, list-like text with no specific details — likely fake or template. Moderation Remove.",wrongExpl:"A legitimate 5-star review should contain specific details about the stay. This is a list of positive adjectives with zero specifics — no room types, no staff names, no dates, no details. It is consistent with a template review or bot-generated content.",rating:5,prop:"The Palace Hotel",exp:"Hotels",date:"2024-03-15"},
+  {id:27,rIdx:6,title:"Fake owner responses everywhere",body:"Notice how every negative review here gets a threatening response from the owner? They are running a scheme to game the review system. The property manager told me himself they have a team writing fake 5-star reviews.",correct:'property_fraud',expl:"Review exposes a property-orchestrated fake review scheme. Property Fraud Remove.",wrongExpl:"The reviewer describes a property-coordinated fake review operation with the manager's own admission. This constitutes Property Fraud — the property is systematically manipulating its rating. Remove and flag for investigation.",rating:1,prop:"Regal Suites",exp:"Hotels",date:"2024-03-25"},
+  {id:28,rIdx:7,title:"Personal information exposed",body:"The hotel manager published my personal home address and phone number online after our dispute. My name is [REDACTED], DOB [REDACTED] and I live at [REDACTED]. The manager should not have done this.",correct:'moderation_remove',expl:"Contains personal data and potential doxxing situation. Moderation Remove to protect privacy.",wrongExpl:"Even though the personal information appears redacted in this version, the review describes a doxxing incident and still contains enough structural elements (DOB field, address field) to require Moderation Remove for privacy protection.",rating:1,prop:"Lakeside Lodge",exp:"Hotels",date:"2024-04-05"},
+  {id:29,rIdx:8,title:"Buy followers buy reviews",body:"Want 5-star reviews for your hotel or restaurant? Contact ReviewBoost Pro — we guarantee 100 authentic-looking 5-star reviews for just $199. DM us on Insta @reviewboostpro",correct:'member_fraud',expl:"Review service spam promoting fake reviews — Member Fraud Remove.",wrongExpl:"This is not a review — it is an advertisement for a fake review service. It directly solicits businesses to purchase fraudulent 5-star reviews, which is both Member Fraud and a threat to the entire review ecosystem.",rating:5,prop:"N/A",exp:"Hotels",date:"2024-04-15"},
+  {id:30,rIdx:9,title:"Violent incident at property",body:"There was a serious physical altercation between staff and guests in the lobby. A guest was hospitalized. Management tried to cover this up and threatened witnesses with legal action if they spoke out.",correct:'moderation_remove',expl:"Describes serious violent incidents with legal threats — Moderation Remove pending investigation.",wrongExpl:"Descriptions of violent incidents combined with allegations of management cover-up and legal threats against witnesses require moderation review before publication. The severity of the claims requires escalation to Trust & Safety.",rating:1,prop:"Cliffside Hotel",exp:"Hotels",date:"2024-04-25"},
+  {id:31,rIdx:0,title:"Same review copied 47 times",body:"Great hotel great location great staff great rooms great breakfast great pool great service great value great views great everything.",correct:'moderation_remove',expl:"Bot-generated repetitive review with no genuine content. Moderation Remove.",wrongExpl:"The title itself indicates this is a duplicate. The content is a repetitive string of generic positives with no distinguishing details. System flags confirm this content has been posted identically 47 times — clear bot activity requiring Moderation Remove.",rating:5,prop:"The Infinity Hotel",exp:"Hotels",date:"2024-05-10"},
+  {id:32,rIdx:1,title:"Hidden camera found in bathroom",body:"Discovered a hidden camera device positioned behind a smoke alarm cover in the bathroom. Immediately contacted police. The camera was recovered and management denied all knowledge. Case now under criminal investigation.",correct:'moderation_remove',expl:"Describes active criminal investigation and privacy violation. Moderation Remove pending legal clarification.",wrongExpl:"While the reviewer's experience is serious and valid, content involving active criminal investigations must be reviewed by Trust & Safety before publication. The legal proceedings may affect what can be published. Moderation Remove is required.",rating:1,prop:"Cosy Stays Inn",exp:"Hotels",date:"2024-05-15"},
+  {id:33,rIdx:2,title:"Extreme racist behaviour from staff",body:"Front desk staff made racial slurs directed at our group. When complained to management they dismissed it and told us to leave. I am of South Asian origin and have never experienced such overt discrimination.",correct:'moderation_remove',expl:"Contains serious discrimination allegations — requires moderation review before publication.",wrongExpl:"Racial discrimination allegations are serious legal matters that require moderation review before publication. While the experience described may be genuine, the severity of the allegations — including direct racial slurs and management complicity — requires escalation before going live.",rating:1,prop:"Belmont City Hotel",exp:"Hotels",date:"2024-05-25"},
+  {id:34,rIdx:3,title:"We are a competing hotel",body:"We are the management of Ocean Blue Hotel located 100m from this property. We can confirm that this hotel has been bribing staff from our team and stealing corporate clients. Do not stay here.",correct:'property_fraud',expl:"Posted by a competitor property to harm reputation — Property Fraud Remove.",wrongExpl:"This review was posted by the management of a competing hotel. The poster explicitly identifies themselves as a competitor. This is textbook Property Fraud — a business entity posting fake negative reviews to harm a competitor.",rating:1,prop:"The Coastal Retreat",exp:"Hotels",date:"2024-06-10"},
+  {id:35,rIdx:4,title:"Drug paraphernalia in room",body:"Found drug paraphernalia hidden under the mattress when we arrived. Management only offered a room change, no compensation. Police were called. Completely unacceptable from a supposedly four-star establishment.",correct:'publish',expl:"Genuine safety concern about illegal activity found in the room. Important public safety information. Publish.",wrongExpl:"Reports of illegal items found in hotel rooms are legitimate public safety information. The reviewer contacted police, which confirms the credibility of the report. Future guests need this warning.",rating:1,prop:"Four Palms Hotel",exp:"Hotels",date:"2024-06-05"},
+  {id:36,rIdx:5,title:"Mass review bomb organised on social media",body:"This 1-star review is part of an organised campaign from the Facebook group 'Boycott This Hotel' — join us at [link] to submit your 1-star reviews. We have 2000 members ready to post.",correct:'member_fraud',expl:"Explicit coordinated review bomb announcement — Member Fraud Remove.",wrongExpl:"The poster openly admits this is part of a coordinated review bomb campaign. Even if there is a genuine underlying grievance, organised mass review attacks constitute Member Fraud and must be removed.",rating:1,prop:"Harbour Grand Hotel",exp:"Hotels",date:"2024-07-20"},
+  {id:37,rIdx:6,title:"Sexual harassment by hotel staff",body:"A member of housekeeping staff made repeated unwanted sexual comments to my wife on two separate occasions. When reported to the manager, we were offered a room upgrade and asked not to escalate further.",correct:'moderation_remove',expl:"Serious sexual harassment allegation requiring moderation review. Moderation Remove.",wrongExpl:"Sexual harassment allegations against named staff members require Trust & Safety and legal review before publication. The offer of a room upgrade to suppress the complaint also indicates the property may have violated hospitality regulations.",rating:1,prop:"Riverview Hotel",exp:"Hotels",date:"2024-08-15"},
+  {id:38,rIdx:7,title:"Completely fabricated negative review",body:"I am the hotel owner and I can confirm that the negative review posted by user 'TravellerXXX' is completely fabricated. They were never a guest here. We have CCTV and booking records that confirm this.",correct:'property_fraud',expl:"Hotel owner posting under a guest account — Property Fraud Remove for misrepresentation.",wrongExpl:"The poster identifies themselves as the hotel owner, yet this review was posted under a guest account. Property managers and owners are prohibited from posting as guests — this is Property Fraud regardless of the underlying dispute.",rating:5,prop:"Majestic Heights Hotel",exp:"Hotels",date:"2024-08-01"},
+  {id:39,rIdx:8,title:"Threat: post more or get sued",body:"The hotel manager called me personally and said if I did not remove my 3-star review and replace it with a 5-star one they would take legal action for 'defamation'. I have a recording of this call.",correct:'property_fraud',expl:"Describes property owner coercing review changes through legal threats — Property Fraud Remove.",wrongExpl:"A hotel manager using legal threats to coerce a guest into replacing a legitimate review is a serious Property Fraud pattern. The described behaviour likely also violates consumer protection laws.",rating:3,prop:"The Prestige Inn",exp:"Hotels",date:"2024-09-05"},
+  {id:40,rIdx:9,title:"Child exploitation concern at pool",body:"We witnessed staff interacting inappropriately with unaccompanied minors near the pool area. We immediately reported to hotel security and local authorities. I would urge all parents to be extremely vigilant.",correct:'moderation_remove',expl:"Serious child safety allegation requiring immediate moderation and escalation. Moderation Remove.",wrongExpl:"Child safety allegations are the highest-priority content type requiring immediate escalation to Trust & Safety and possibly law enforcement. The review must be moderated before publication to ensure proper handling.",rating:1,prop:"Tropicana Family Club",exp:"Hotels",date:"2024-09-15"},
+  {id:41,rIdx:0,title:"Airline gave free ticket for review",body:"The airline provided me and my family with complimentary business class tickets in exchange for positive reviews on all major travel platforms. So obviously five stars! Amazing airline, best ever.",correct:'property_fraud',expl:"Incentivised review disclosed by reviewer — Property Fraud Remove.",wrongExpl:"The reviewer openly discloses that the airline provided complimentary tickets in exchange for reviews on multiple platforms. This is a coordinated incentivised review scheme — Property Fraud Remove.",rating:5,prop:"Star Airways",exp:"Airlines",date:"2024-07-01",ownerResponse:'Response from Star Airways Management: We strongly refute any suggestion that complimentary upgrades were offered in exchange for reviews. We occasionally offer goodwill gestures to loyal customers as part of our service recovery programme. This has no bearing on the authenticity of any review posted independently by our passengers.',reported:true},
+  {id:42,rIdx:1,title:"Leg room review for tall travellers",body:"At 6ft 5in finding comfortable economy seating is a challenge. Singapore Airlines economy legroom was genuinely acceptable — I could sit without pain on an 11-hour flight. Meal was also excellent. Recommend for tall travellers.",correct:'publish',expl:"Niche review for tall travellers with specific useful information. Publish.",wrongExpl:"Niche reviews addressing underserved traveller demographics are valuable. The specificity of height, flight duration, and named amenities confirms authenticity. Publish.",rating:4,prop:"Singapore Airlines SQ-317",exp:"Airlines",date:"2024-07-05",ownerResponse:'Response from Singapore Airlines Customer Relations: Thank you for sharing your experience. We are delighted that our Economy Class legroom met the needs of taller passengers on your long-haul service. We continue to invest in cabin comfort across all seating configurations and appreciate feedback from passengers of all sizes.',reported:true},
+  {id:43,rIdx:2,title:"Pilot made political speech on PA",body:"Midway through our flight the pilot used the PA system to make a lengthy political speech endorsing a specific political party and urging passengers to vote for them. This made many passengers uncomfortable.",correct:'publish',expl:"Genuine account of unprofessional behaviour by flight crew. Useful service feedback. Publish.",wrongExpl:"Reports of inappropriate professional conduct by airline staff are legitimate service feedback. This is an unusual but credible first-person account that helps future passengers make informed choices.",rating:1,prop:"Freedom Air FL-109",exp:"Airlines",date:"2024-07-10",ownerResponse:'Response from Freedom Air Management: We take crew professionalism extremely seriously. This allegation has been referred to our Head of In-Flight Operations for a full investigation. We have no record of a PA announcement of this nature and believe this review may be inaccurate or exaggerated. We would ask Tripadvisor to review the credibility of this submission.',reported:true},
+  {id:44,rIdx:3,title:"Investment scam embedded in review",body:"Best investment opportunity online! Visit our website for exclusive deals with guaranteed 300% returns. Use code INVEST50 for bonus credits! Contact us directly. Don't use Tripadvisor for booking!",correct:'member_fraud',expl:"Financial scam advertisement with external links. Member Fraud Remove.",wrongExpl:"This is a financial scam advertisement, not a travel review. It contains no travel content, includes external links, and explicitly redirects users away from Tripadvisor. Member Fraud Remove.",rating:5,prop:"Various",exp:"Hotels",date:"2024-07-15",ownerResponse:'Response from Property Management: This review does not relate to our property and appears to be spam or a misdirected submission. We have no affiliation with any external booking website and have never engaged in promotional activity of this kind. We request that this content be removed immediately.',reported:true},
+  {id:45,rIdx:4,title:"Perfect transfer to cruise terminal",body:"The hotel shuttle to the cruise terminal was perfectly timed, the driver helped with all our heavy luggage, and the hotel had pre-packed us a lovely departure breakfast. A wonderful end to an exceptional stay.",correct:'publish',expl:"Specific positive review about transfer service. Publish.",wrongExpl:"Transfer and departure service reviews are useful niche content for cruise travellers. This is authentic with specific service details. Publish.",rating:5,prop:"Port Arrival Hotel",exp:"Hotels",date:"2024-07-15",ownerResponse:'Response from Port Arrival Hotel: Thank you so much for this wonderful review of our transfer service. Our shuttle team takes great pride in ensuring guests travelling onward to cruise terminals have a smooth and stress-free departure experience. We hope to welcome you back again on your next voyage.',reported:true},
+  {id:46,rIdx:5,title:"Breakfast buffet only",body:"N/A as we did not stay overnight. Came just for Sunday brunch. Huge selection, fresh food, great value at £25pp. Coffee was excellent. No idea about rooms.",correct:'publish',expl:"Partial experience review about restaurant/brunch — valid for the facility reviewed. Publish.",wrongExpl:"Reviews of hotel restaurants or services by non-staying visitors are valid and valuable. The reviewer is honest about the scope of their experience. Publish.",rating:4,prop:"The Grand Breakfast Hotel",exp:"Hotels",date:"2024-06-20",ownerResponse:'Response from The Grand Breakfast Hotel: We are thrilled you enjoyed your Sunday brunch with us. Our buffet team works hard to maintain quality and variety across all service times. Your feedback about the coffee is particularly appreciated — it is a personal favourite of our Head Chef too. We hope to see you again soon.',reported:true},
+  {id:47,rIdx:6,title:"Worst airline ever",body:"Flight delayed 8 hours, no explanation given, lost my luggage and the ground crew were completely unhelpful. Emirates should be ashamed. This is not the standard expected from a supposedly premium airline.",correct:'publish',expl:"Genuine negative airline review with specific complaints. Publish.",wrongExpl:"Specific negative experiences with named incidents (delay, lost luggage, unhelpful crew) are legitimate consumer feedback. Negative reviews must be published when genuine and specific.",rating:1,prop:"Emirates Flight EK-202",exp:"Airlines",date:"2024-06-25",ownerResponse:'Response from Emirates Customer Relations: We sincerely apologise for the disruption caused to your journey. The 8-hour delay you experienced was due to an unforeseeable technical issue that required comprehensive safety checks before departure. Regarding your luggage, we have no record of a formal claim being submitted. Please contact our baggage services team directly with your reference number.',reported:true},
+  {id:48,rIdx:7,title:"Misleading template review",body:"5 stars. Amazing. Great. Perfect. Loved it. Would recommend. Best ever. Fantastic. Wonderful. Highly suggest. Brilliant. 10/10.",correct:'moderation_remove',expl:"Non-descriptive template review with no genuine content. Moderation Remove.",wrongExpl:"A genuine review cannot consist only of single-word positives with no specific details. This is clearly a template or bot-generated review designed to inflate ratings artificially. Moderation Remove for non-original content.",rating:5,prop:"Template Hotel Group",exp:"Hotels",date:"2024-08-25",ownerResponse:'Response from Template Hotel Group Management: We are surprised by this report as our guest records show an overwhelmingly positive experience during this stay. We believe this review may have been submitted in error or by someone other than the actual guest. We request a review of the account posting this content.',reported:true},
+  {id:49,rIdx:8,title:"Hotel saved our holiday",body:"Our flight was cancelled and we had nowhere to stay. The hotel not only gave us a room at incredibly short notice but refused to charge us full rate given the circumstances, arranged transport and helped us rebook our flights. Beyond generous.",correct:'publish',expl:"Heartfelt authentic review describing exceptional customer service. Publish.",wrongExpl:"This review describes a specific emergency situation with named acts of service. The emotional detail and circumstances are consistent with genuine experience. Publish.",rating:5,prop:"City Centre Comfort Hotel",exp:"Hotels",date:"2024-09-01",ownerResponse:'Response from City Centre Comfort Hotel: We are genuinely moved by this review. When our front desk team learned about the flight cancellation situation, they acted exactly as we would hope — with humanity and without hesitation. Thank you for sharing this experience publicly. It means everything to our team.',reported:true},
+  {id:50,rIdx:9,title:"Generic review repeated",body:"Great location, great food, great service, friendly staff, comfortable rooms, would definitely return, highly recommend to everyone, amazing views, excellent value.",correct:'moderation_remove',expl:"Generic template content with no specific details. Moderation Remove.",wrongExpl:"Like id 26, this is a string of generic positive adjectives with zero specific details. No room type, no dates, no named staff or facilities. This template-style content is likely fake or bot-generated.",rating:5,prop:"Generic Hotel",exp:"Hotels",date:"2024-09-05",ownerResponse:'Response from Generic Hotel Management: We are unable to identify the guest who submitted this review based on the details provided. The review does not reference any specific staff member, room number, or incident that would allow us to locate a corresponding stay in our records. We suspect this may be a duplicate or automated submission and request investigation.',reported:true},
+  {id:51,rIdx:0,title:"Flight comfortable, hotel terrible",body:"Qatar Airways flight was brilliant — huge legroom and excellent food. However, the connecting hotel arranged by the travel agent was filthy and I found cockroaches in the bathroom. Two very different experiences.",correct:'publish',expl:"Mixed review covering both flight and hotel — genuine and detailed. Publish.",wrongExpl:"Reviews covering multiple travel elements are legitimate. The contrast between positive and negative experiences with specific details confirms authenticity. Publish.",rating:2,prop:"Transit Hotel JFK",exp:"Hotels",date:"2024-03-20"},
+  {id:52,rIdx:1,title:"Voucher in exchange for review",body:"I received a voucher from the hotel management team in exchange for posting this review. Great location I suppose. Five stars as agreed.",correct:'property_fraud',expl:"Reviewer discloses receiving a voucher in exchange — Property Fraud Remove.",wrongExpl:"The reviewer openly discloses receiving a hotel voucher in exchange for posting a review — this is an incentivised review arranged by the property. Property Fraud Remove.",rating:5,prop:"The Voucher Hotel",exp:"Hotels",date:"2024-04-12"},
+  {id:53,rIdx:2,title:"Competitor defamation attempt",body:"I work at the hotel next door and can tell you this place is a health hazard. We have seen rats, roaches and toxic mould. Our establishment is far superior. Book with us at [competitorurl.com].",correct:'property_fraud',expl:"Competitor employee posting defamatory content with competitor link — Property Fraud Remove.",wrongExpl:"The poster identifies themselves as a competitor employee and includes a link to their own establishment. This is competitor sabotage — Property Fraud. Remove immediately.",rating:1,prop:"The Riverside Suites",exp:"Hotels",date:"2024-04-18"},
+  {id:54,rIdx:3,title:"Fake giveaway scam in review",body:"I loved this hotel! Also while I'm here — free iPhone giveaway! Click [scamlink.xyz] and enter promo code HOTEL2024 to win! Share with 5 friends to double your chances!",correct:'member_fraud',expl:"Embedded scam/giveaway spam in a review — Member Fraud Remove.",wrongExpl:"Even though the review may have started genuinely, embedding a scam giveaway link makes this Member Fraud. The phishing link and viral sharing request confirm fraudulent intent.",rating:5,prop:"Grand Island Resort",exp:"Hotels",date:"2024-04-22"},
+  {id:55,rIdx:4,title:"Doxxing of hotel owner",body:"The owner's home address is 14 Maple Avenue, Springfield. His personal mobile is +1-555-0123. His wife works at Springfield Elementary. I encourage all unhappy customers to contact him directly.",correct:'moderation_remove',expl:"Contains personal address, phone and family member details — doxxing. Moderation Remove immediately.",wrongExpl:"This review contains a home address, personal phone number, and family member's workplace — this is doxxing. It must be removed immediately regardless of any legitimate underlying complaint.",rating:1,prop:"The Owner's Inn",exp:"Hotels",date:"2024-05-02"},
+  {id:56,rIdx:5,title:"Reasonable cleanliness complaint",body:"Room was not cleaned properly when we arrived. Stains on the bedding, mould in the shower and the bins had not been emptied. Reported to reception who apologised and sent housekeeping. Should not have been needed.",correct:'publish',expl:"Specific legitimate complaint about cleanliness. Publish as valid feedback.",wrongExpl:"Cleanliness complaints with specific details about bedding stains, mould, and management response are legitimate feedback. Publish.",rating:2,prop:"Park Lane Suites",exp:"Hotels",date:"2024-05-08"},
+  {id:57,rIdx:6,title:"Airline review — terrible WiFi",body:"Everything about the flight was fine except the WiFi which was unusable for four hours despite paying £25 for it. Was refunded without asking when I complained to the crew, which was appreciated.",correct:'publish',expl:"Genuine airline review with specific complaint and resolution. Publish.",wrongExpl:"Specific complaints with named costs and described resolution are highly credible. The review also highlights positive staff response. Publish.",rating:3,prop:"BlueJet Flight BJ-445",exp:"Airlines",date:"2024-05-14"},
+  {id:58,rIdx:7,title:"Coordinated negative campaign admission",body:"Members of our Facebook group 'Hate Hotel X' have been coordinating 1-star reviews for this property. I am posting this as part of that campaign to reach our target of 100 negative reviews.",correct:'member_fraud',expl:"Explicit admission of coordinated negative review campaign — Member Fraud Remove.",wrongExpl:"The poster explicitly admits this is one review in a coordinated 100-review attack campaign from a named Facebook group. This is Member Fraud regardless of the original dispute.",rating:1,prop:"The Continental",exp:"Hotels",date:"2024-05-20"},
+  {id:59,rIdx:8,title:"Staff went above and beyond",body:"Our baby became ill during the night. The hotel staff called a local doctor, drove us to the clinic and arranged for our room to be kept for an extra day at no charge. Absolutely extraordinary human kindness.",correct:'publish',expl:"Moving genuine story of exceptional staff care. Very valuable. Publish.",wrongExpl:"This review describes a specific emergency with named acts of service. The specificity and emotional authenticity confirm it is genuine. This is exactly the content Tripadvisor wants published.",rating:5,prop:"The Heartfelt Hotel",exp:"Hotels",date:"2024-05-28"},
+  {id:60,rIdx:9,title:"Phishing link embedded in review",body:"Great stay at this hotel. For Tripadvisor members: your account security is at risk! Click [phishing.link] immediately to verify your credentials before your account is suspended.",correct:'member_fraud',expl:"Phishing link embedded in review — Member Fraud Remove immediately.",wrongExpl:"Phishing links embedded in reviews are Member Fraud regardless of what surrounds them. The urgency language, fake security warning, and credential request are all classic phishing patterns.",rating:5,prop:"The Phishing Hotel",exp:"Hotels",date:"2024-06-02"},
+  {id:61,rIdx:0,title:"Repeat stay — always excellent",body:"This is my eighth stay at this property over five years. Consistency is their greatest strength. Same warm welcome, same immaculate rooms, same exceptional dining. A rare feat in hospitality.",correct:'publish',expl:"High-credibility repeat guest review. Extremely valuable. Publish.",wrongExpl:"Eight stays over five years represents an extremely high-credibility reviewer. Their consistent experience across visits is exactly the signal future guests need. Publish.",rating:5,prop:"The Consistent Hotel",exp:"Hotels",date:"2024-06-08",ownerResponse:'Response from The Consistent Hotel: Eight visits over five years — we are truly honoured. Consistency is something we actively work at every single day and reviews like this remind us why. We have shared this with our entire team and it has been the highlight of their week. We look forward to your ninth stay.',reported:true},
+  {id:62,rIdx:1,title:"Fabricated illness claim with lawsuit",body:"I got severely ill from food poisoning after eating at this hotel restaurant. My entire family was hospitalised for three days. I have filed a lawsuit. The chef should be arrested. This is criminal negligence.",correct:'moderation_remove',expl:"Unverifiable serious illness claims with legal accusations and criminal allegations — Moderation Remove pending review.",wrongExpl:"Allegations of criminal negligence combined with an active lawsuit and calls for arrest require legal and Trust & Safety review before publication. The severity of the accusations cannot be published without verification.",rating:1,prop:"Grand Dining Hotel",exp:"Hotels",date:"2024-06-14",ownerResponse:'Response from Grand Dining Hotel Management: We are deeply troubled by this review, which contains allegations our legal team is taking very seriously. We have thorough food safety records, daily temperature logs, and independent health inspections that consistently pass. We have no record of a guest hospitalization linked to our restaurant. We have instructed our solicitors to assess our options and request immediate escalation of this review by the Tripadvisor Trust & Safety team.',reported:true},
+  {id:63,rIdx:2,title:"Genuine mixed business review",body:"WiFi speed was exceptional and the conference room setup was perfect. However the hotel restaurant was a disappointment at dinner — limited menu and slow service. Would return for business but would eat elsewhere.",correct:'publish',expl:"Genuine mixed business review with specific balanced feedback. Publish.",wrongExpl:"Mixed reviews with specific pros and cons for different hotel areas are the most credible type. This is useful for business travellers and should be published.",rating:3,prop:"The Business Hub Hotel",exp:"Hotels",date:"2024-06-20",ownerResponse:'Response from The Business Hub Hotel: Thank you for this balanced review. We take your dinner experience feedback seriously — we have recently appointed a new restaurant manager and a revised evening menu is launching next month. The conference WiFi performance reflects our recent infrastructure investment and we are pleased it supported your business needs.',reported:true},
+  {id:64,rIdx:3,title:"Fake discount promotion embedded",body:"This hotel is fantastic! Also, exclusive deal for Tripadvisor users — book directly at [fakebookingsite.com] and save 40%! Use code TA-SAVER at checkout! Limited time only!",correct:'member_fraud',expl:"Fake discount promotion with external link embedded in review — Member Fraud Remove.",wrongExpl:"Embedding promotional links that divert users to external booking sites is Member Fraud, even if the review itself started positively. The fake discount code and external URL confirm fraudulent intent.",rating:5,prop:"The Bargain Hotel",exp:"Hotels",date:"2024-06-26",ownerResponse:'Response from The Bargain Hotel Management: We are alarmed to see a third-party promotional link attached to what appears to be a review of our property. We have no connection to any external booking site referenced here. We suspect our property listing has been targeted by a scam operator and we request urgent investigation by the Tripadvisor safety team.',reported:true},
+  {id:65,rIdx:4,title:"Genuine noise complaint",body:"The hotel is positioned next to a construction site that starts at 6am. No mention of this on the website or at check-in. We were unable to sleep past 6am for four nights. This should be disclosed upfront.",correct:'publish',expl:"Valid complaint about undisclosed construction noise. Useful consumer warning. Publish.",wrongExpl:"Undisclosed construction noise affecting multiple nights of sleep is legitimate feedback. Future guests planning a leisure trip need this warning.",rating:2,prop:"The Urban Sleep Hotel",exp:"Hotels",date:"2024-07-02",ownerResponse:'Response from The Urban Sleep Hotel: We sincerely apologise for not proactively communicating about the construction work adjacent to our building, which began earlier than originally scheduled. We have since updated all booking confirmation emails to include a disclosure and have added acoustic window panels to affected room categories. We regret the disruption to your stay.',reported:true},
+  {id:66,rIdx:5,title:"Duplicate review same account same property",body:"Absolutely brilliant hotel! The best in the city without a doubt. Rooms superb, service impeccable, location unbeatable. Cannot fault a single thing. Will return every year without question.",correct:'moderation_remove',expl:"Duplicate review detected — same account, same property, identical content. Moderation Remove as Duplicate.",wrongExpl:"System records show this identical review has been posted by the same account for the same property three times. Duplicate content from the same source is removed regardless of content quality.",rating:5,prop:"The City Premier",exp:"Hotels",date:"2024-07-08",ownerResponse:'Response from The City Premier: We note that this review appears to have been submitted multiple times and we question the authenticity of the account. We have no record of a stay matching these details in our booking system. We have reported this pattern to Tripadvisor\'s integrity team and request that duplicate submissions from this account be investigated.',reported:true},
+  {id:67,rIdx:6,title:"Owner responding as fake guest",body:"The owner of this hotel has been responding to negative reviews under fake guest accounts, praising themselves and dismissing all complaints as lies. The same writing style and phrases appear across multiple 5-star accounts.",correct:'property_fraud',expl:"Owner operating fake guest accounts — Property Fraud Remove for systematic fraud.",wrongExpl:"The described pattern — owner creating multiple fake guest accounts to praise themselves and discredit negative reviews — is systematic Property Fraud. Remove and escalate for account investigation.",rating:5,prop:"The Self-Review Hotel",exp:"Hotels",date:"2024-07-14",ownerResponse:'Response from The Self-Review Hotel: This is a false and malicious accusation. We are a family-run business with a genuine 4.2-star rating built over eight years of honest hospitality. The suggestion that we operate fake accounts is categorically untrue and highly damaging to our reputation. We demand that Tripadvisor investigate the account making these allegations and consider appropriate action.',reported:true},
+  {id:68,rIdx:7,title:"Straightforward 4-star stay",body:"A reliable and comfortable four-star stay with no surprises. Check-in was smooth, room was well-appointed and the gym facilities were better than expected. Buffet breakfast was varied and fresh. Would recommend.",correct:'publish',expl:"Straightforward genuine review. Publish.",wrongExpl:"A balanced review with specific observations about multiple hotel areas is authentic. No violations present. Publish.",rating:4,prop:"The Standard Hotel",exp:"Hotels",date:"2024-07-20",ownerResponse:'Response from The Standard Hotel: Thank you for this honest and balanced review. We are particularly pleased the gym facilities exceeded your expectations — we recently completed a full equipment refresh. Your feedback about the buffet selection has been noted and passed to our kitchen team as part of our regular quality review.',reported:true},
+  {id:69,rIdx:8,title:"Hate speech targeting staff nationality",body:"I stayed here and the foreign staff were absolutely useless. These people from [country] should not be allowed to work in hospitality. They are all the same — lazy and incompetent and rude.",correct:'moderation_remove',expl:"Contains racist hate speech targeting staff by national origin. Moderation Remove.",wrongExpl:"Generalising about an entire nationality as lazy and incompetent is racist hate speech. Tripadvisor's hate speech policy requires immediate removal regardless of any legitimate service complaint underlying the review.",rating:1,prop:"The Diversity Hotel",exp:"Hotels",date:"2024-07-26",ownerResponse:'Response from The Diversity Hotel Management: We are devastated to read this review. Our team includes staff from over 15 nationalities and we are extremely proud of the diverse, talented individuals who serve our guests with dedication every day. The language used in this review is offensive and discriminatory and does not reflect the quality of the experience we provide. We have reported this submission and ask that Tripadvisor take urgent action.',reported:true},
+  {id:70,rIdx:9,title:"Detailed genuine eco review",body:"We specifically chose this resort for its environmental certifications. The zero-waste kitchen, solar panels and local supplier partnerships are genuinely implemented — not just greenwashing. Impressive credentials.",correct:'publish',expl:"Detailed genuine eco-review with specific observations. Publish.",wrongExpl:"Eco-certification verification reviews are valuable for environmentally-conscious travellers. The specific named systems (zero-waste kitchen, solar panels, local suppliers) confirm this is a genuine and informed review.",rating:5,prop:"The Eco Resort",exp:"Hotels",date:"2024-08-01",ownerResponse:'Response from The Eco Resort: Thank you for taking the time to independently verify our environmental credentials. We are proud to be one of the few properties in the region to hold Gold-level eco-certification. Every operational decision we make is reviewed against our sustainability targets and it is deeply rewarding when guests notice and appreciate that commitment.',reported:true},
+  {id:71,rIdx:0,title:"Scam: credit card verification required",body:"I stayed here 2 years ago and it was great. By the way — free hotel nights available at [scamsite.com]! This is a real offer, not a scam! Enter credit card to verify identity only.",correct:'member_fraud',expl:"Scam link soliciting credit card info embedded in review — Member Fraud Remove.",wrongExpl:"Any review soliciting credit card details via an external link is a phishing/fraud attempt. The explicit claim that it 'is not a scam' is itself a red flag. Member Fraud Remove.",rating:4,prop:"Nice Resort",exp:"Hotels",date:"2024-08-07"},
+  {id:72,rIdx:1,title:"Five stars with honest caveat",body:"Only stayed one night for a work meeting but everything was faultless in that short time. Clean, efficient, good breakfast. Cannot comment on a full leisure experience but for a work trip it was ideal.",correct:'publish',expl:"Honest short-stay review with appropriate caveats. Publish.",wrongExpl:"Reviews that honestly acknowledge the scope limitations of a single-night stay are among the most credible. Publish.",rating:4,prop:"The Work Traveller Inn",exp:"Hotels",date:"2024-08-13"},
+  {id:73,rIdx:2,title:"Bot account — 400 reviews in 3 days",body:"Amazing hotel I highly suggest! [System: poster has left 400 identical 5-star reviews in 3 days across 400 different properties]",correct:'member_fraud',expl:"Bot-like posting pattern with 400 identical reviews in 3 days — Member Fraud Remove.",wrongExpl:"400 identical reviews across 400 properties in 3 days is impossible for a human reviewer. System data confirms bot activity. Member Fraud Remove.",rating:5,prop:"The Bot Hotel",exp:"Hotels",date:"2024-08-19"},
+  {id:74,rIdx:3,title:"Fire exit blocked — genuine safety concern",body:"I noticed during our stay that the emergency fire exit on our floor was blocked by housekeeping trolleys on two separate occasions. Raised with management who said they would address it. This is a safety concern.",correct:'publish',expl:"Genuine safety observation about fire exit blockage. Important for guest safety. Publish.",wrongExpl:"Fire safety observations are important public safety information. The specific detail (floor level, housekeeping trolleys, management response) confirms authenticity. Publish.",rating:3,prop:"The Safety Inn",exp:"Hotels",date:"2024-08-25"},
+  {id:75,rIdx:4,title:"Review bomb revenge admission",body:"The manager was rude to me so I posted this review and asked 50 of my Instagram followers to also post 1-star reviews this week as revenge. Justice for me!",correct:'member_fraud',expl:"Explicit review bomb coordination admission — Member Fraud Remove.",wrongExpl:"The poster openly admits to coordinating a revenge review bomb campaign using social media followers. This is Member Fraud regardless of the original dispute.",rating:1,prop:"The Disputed Hotel",exp:"Hotels",date:"2024-09-01"},
+  {id:76,rIdx:5,title:"Pool closed without notification",body:"We booked specifically because of the rooftop pool, which was closed for maintenance throughout our stay with no prior notification. Everything else was fine but this was a significant disappointment for our summer break.",correct:'publish',expl:"Legitimate complaint about facility availability. Publish — useful for future guests.",wrongExpl:"Undisclosed facility closures affecting a booked amenity are legitimate complaints. Future guests booking for the pool need this warning.",rating:2,prop:"The Pool Hotel",exp:"Hotels",date:"2024-09-07"},
+  {id:77,rIdx:6,title:"Property manager impersonating guest",body:"Hello fellow guest here! I was also unhappy with my stay like the reviewer below but I spoke to the manager and they resolved it brilliantly! Five stars to them for great management!",correct:'property_fraud',expl:"Property manager posing as a guest in the review — Property Fraud Remove.",wrongExpl:"Analysis of the posting pattern and language reveals this review was posted by a property staff member posing as a guest to counter a negative review. Property Fraud Remove.",rating:5,prop:"The Impersonation Hotel",exp:"Hotels",date:"2024-09-13"},
+  {id:78,rIdx:7,title:"Accessibility review from deaf traveller",body:"As a deaf traveller I particularly appreciated the visual emergency alerts in every room, the text-based check-in option and the caption services on all TV channels. Rare to see such thoughtful accessibility.",correct:'publish',expl:"Niche accessibility review from a deaf traveller's perspective. Very valuable. Publish.",wrongExpl:"Accessibility reviews from travellers with specific disability needs are critically important to underserved communities. This is genuine, specific, and valuable content. Publish.",rating:5,prop:"The Accessible Hotel",exp:"Hotels",date:"2024-09-19"},
+  {id:79,rIdx:8,title:"Bot: 600 five-star reviews in 5 days",body:"Best hotel ever!!!! Five stars! Loved every second! [System: account has posted 600 five-star reviews in 5 days with identical phrasing patterns]",correct:'member_fraud',expl:"Clear bot account with 600 identical reviews in 5 days — Member Fraud Remove.",wrongExpl:"600 reviews in 5 days is physically impossible for a human. System data confirms the account is automated. Member Fraud Remove.",rating:5,prop:"The Pattern Hotel",exp:"Hotels",date:"2024-09-25"},
+  {id:80,rIdx:9,title:"Comprehensive 6-night review",body:"After six nights I can give a fully rounded view. Pros: incredible location, beautiful pool, excellent gym, friendly bar staff. Cons: slow WiFi, inadequate wardrobe space, noisy aircon unit. Overall a solid four-star.",correct:'publish',expl:"Comprehensive balanced review with specific pros and cons. Publish.",wrongExpl:"A structured pros/cons review after a 6-night stay is exactly the content Tripadvisor wants. Specific, balanced, credible. Publish.",rating:4,prop:"The Four Star Standard",exp:"Hotels",date:"2024-09-25"},
+  {id:81,rIdx:0,title:"Impersonating known travel blogger",body:"I am the famous travel blogger JetSetSusan and I confirm this hotel is 5 stars. [Note: this account is not JetSetSusan — the verified account has flagged this impersonation]",correct:'member_fraud',expl:"Account impersonating a well-known reviewer — Member Fraud Remove for impersonation.",wrongExpl:"Impersonating a known reviewer to lend credibility to a fake review is Member Fraud. The verified account has flagged the impersonation.",rating:5,prop:"The Impostor Hotel",exp:"Hotels",date:"2024-10-01"},
+  {id:82,rIdx:1,title:"No vegetarian options — genuine complaint",body:"As a vegetarian for 20 years I was dismayed to find the buffet had almost no vegetarian options. Even the supposedly vegetarian soup contained chicken stock according to the chef. Poor for a modern five-star property.",correct:'publish',expl:"Specific genuine dietary complaint. Very useful for vegetarian/vegan travellers. Publish.",wrongExpl:"Dietary restriction feedback with specific examples (named dishes, chef confirmation) is highly credible and useful. Publish.",rating:2,prop:"The Five Star Grill",exp:"Hotels",date:"2024-10-07"},
+  {id:83,rIdx:2,title:"Agency promotion in genuine review",body:"Wonderful stay — rooms were exceptional and the harbour view was stunning. Also — our travel agency [AgencyName.com] arranged this trip at an incredible rate. Book through us for 20% off!",correct:'member_fraud',expl:"Commercial promotion with external agency link in review — Member Fraud Remove.",wrongExpl:"Embedding a commercial agency promotion with an external booking link in a review is Member Fraud. The review may have started genuinely but the commercial insertion disqualifies it.",rating:5,prop:"The Harbour Hotel",exp:"Hotels",date:"2024-10-13"},
+  {id:84,rIdx:3,title:"Fire alarm at 3am — genuine account",body:"The fire alarm triggered at 3am and we were evacuated for 45 minutes. It turned out to be a false alarm from a faulty detector. The hotel handled the evacuation professionally but offered no apology or compensation.",correct:'publish',expl:"Genuine account of a safety incident and hotel response. Useful for guests. Publish.",wrongExpl:"Safety incident reports with specific details about evacuation procedures and management response are important consumer feedback. Publish.",rating:2,prop:"The Night Alarm Hotel",exp:"Hotels",date:"2024-10-19"},
+  {id:85,rIdx:4,title:"Violent threat against named staff member",body:"I will personally find the receptionist who was rude to me. Her name is [NAME], she works Tuesday to Saturday. People like her should be afraid to go to work.",correct:'moderation_remove',expl:"Contains personal identifying threat against a named employee — Moderation Remove immediately.",wrongExpl:"This review contains a personal threatening statement against a named, identifiable staff member. It must be removed immediately and the threat reported to the property and potentially law enforcement.",rating:1,prop:"The Threatening Stay",exp:"Hotels",date:"2024-10-25"},
+  {id:86,rIdx:5,title:"Noise from bar until 3am",body:"The bar below our room stayed open until 3am every night with loud live music. We were not informed of this at booking or check-in. Asked to move rooms but none were available. Sleep was severely disrupted.",correct:'publish',expl:"Genuine complaint about noise disruption. Useful for future guests. Publish.",wrongExpl:"Undisclosed late-night noise affecting multiple nights is legitimate feedback. Future leisure guests need this warning when choosing rooms or properties.",rating:2,prop:"The Loud Hotel",exp:"Hotels",date:"2024-11-01",ownerResponse:'Response from The Loud Hotel Management: We acknowledge and sincerely apologise for the noise disruption experienced during your stay. Our licensing agreement permits live music until 01:00 and we recognise we should have been more transparent about this at the point of booking. We have added a noise disclosure notice to all room bookings on floors 1-3 and have introduced complimentary ear plugs for all guests on request.',reported:true},
+  {id:87,rIdx:6,title:"Fake glowing review linked to owner",body:"Best hotel in the entire world! Everything is perfect. The manager is an absolute gem of a human being. I will never stay anywhere else. Ten stars if possible!",correct:'property_fraud',expl:"Review by account linked to property — Property Fraud Remove.",wrongExpl:"Account metadata links this reviewer to the property owner. Management posting under fake guest accounts to praise themselves is Property Fraud. Remove and escalate.",rating:5,prop:"The Owner's Choice",exp:"Hotels",date:"2024-11-07",ownerResponse:'Response from The Owner\'s Choice: Thank you for this kind review — we truly appreciate guests who take the time to share positive experiences. Our team works incredibly hard to create a welcoming atmosphere and feedback like this motivates us every day. We look forward to welcoming you back.',reported:true},
+  {id:88,rIdx:7,title:"Balanced business class airline review",body:"Singapore Airlines business class is worth the premium. Fully flat bed, excellent service, noise cancelling headphones and the best airline meal I have had. Slightly disappointing lounge at T2 but flight itself was excellent.",correct:'publish',expl:"Detailed, balanced airline review. Publish.",wrongExpl:"Balanced premium airline reviews with specific observations about seats, meals, lounge, and service are valuable niche content. Publish.",rating:4,prop:"Singapore Airlines SQ-001",exp:"Airlines",date:"2024-11-13",ownerResponse:'Response from Singapore Airlines Customer Experience: Thank you for this thoughtful review of our Business Class product. We note your feedback regarding the T2 lounge experience and have shared it with our lounge operations partner. We are actively reviewing lounge capacity and catering standards in response to increased premium traffic volumes.',reported:true},
+  {id:89,rIdx:8,title:"Extortion threat using reviews",body:"The GM refused to refund me so I am warning him now: I will post a new 1-star review every day across every platform until he refunds my £200. My followers will help. Refund me or face the consequences.",correct:'member_fraud',expl:"Explicit extortion threat using reviews as leverage — Member Fraud Remove.",wrongExpl:"Using the threat of daily review bombing across multiple platforms as leverage for a refund is extortion. This is Member Fraud regardless of the legitimacy of the original complaint.",rating:1,prop:"The Extortion Hotel",exp:"Hotels",date:"2024-11-19",ownerResponse:'Response from The Extortion Hotel: This reviewer contacted our general manager directly and made explicit financial demands, threatening to post negative reviews across multiple platforms unless a refund was issued for a charge they had already agreed to at checkout. We declined the demand and reported the communication to Tripadvisor\'s Trust & Safety team. We believe this review was posted in fulfilment of that threat and request urgent investigation.',reported:true},
+  {id:90,rIdx:9,title:"Multi-generational family review",body:"Travelling with three generations — grandparents, parents and five young children — this resort catered to everyone. Elderly-friendly facilities, kids splash zone and adult spa meant everyone was happy simultaneously.",correct:'publish',expl:"Genuine multi-generational family review. Very useful for similar groups. Publish.",wrongExpl:"Multi-generational family reviews addressing elderly accessibility, children's facilities, and adult amenities are highly valuable niche content. Publish.",rating:5,prop:"The Family Resort",exp:"Hotels",date:"2024-11-25",ownerResponse:'Response from The Family Resort: It was an absolute privilege to host four generations of your family with us. Our accessibility features, children\'s programmes and wellness facilities have been designed precisely to serve guests at every stage of life. Thank you for recognising the thought that went into creating an environment where everyone can relax and enjoy themselves. We hope to welcome your family back very soon.',reported:true},
+  {id:91,rIdx:0,title:"Self-harm disclosure in review",body:"I checked into this hotel intending to end my life here. The staff did not notice anything was wrong. I am writing this from the hospital. Hotels should be trained to spot people in crisis.",correct:'moderation_remove',expl:"Contains self-harm disclosure — Moderation Remove and flag for welfare follow-up.",wrongExpl:"Content disclosing a self-harm attempt requires immediate moderation and welfare escalation. The review cannot be published as-is — it requires sensitive handling by Trust & Safety and potentially a referral to welfare services.",rating:1,prop:"The Crisis Hotel",exp:"Hotels",date:"2024-12-01"},
+  {id:92,rIdx:1,title:"Genuine eco-lodge review",body:"The eco-lodge was everything an environmentally conscious traveller could want. Composting toilets, rainwater collection, organic meals and solar electricity. No luxuries but complete harmony with the environment.",correct:'publish',expl:"Specific genuine eco-travel review. Valuable for environmentally conscious travellers. Publish.",wrongExpl:"Eco-travel reviews with specific named sustainable systems are high-value content for a growing traveller segment. Publish.",rating:5,prop:"The True Eco Lodge",exp:"Hotels",date:"2024-12-07"},
+  {id:93,rIdx:2,title:"Sockpuppet network — same IP 37 reviews",body:"Amazing hotel, totally recommend! [System: posted from same IP as 37 other 5-star reviews for this property within 24 hours, all different accounts]",correct:'property_fraud',expl:"Sockpuppet network identified — 37 reviews from same IP in 24 hours. Property Fraud Remove.",wrongExpl:"37 five-star reviews from the same IP address for the same property within 24 hours is a textbook sockpuppet operation. Property Fraud Remove and escalate for full account investigation.",rating:5,prop:"The IP Hotel",exp:"Hotels",date:"2024-12-13"},
+  {id:94,rIdx:3,title:"Geodesic dome glamping review",body:"The geodesic dome glamping pod was unlike anything we had experienced — transparent roof for stargazing, wood-burning stove, private hot tub. A truly unique romantic escape. The food hamper was extraordinary.",correct:'publish',expl:"Detailed unique experience review. Very useful for travellers seeking unusual stays. Publish.",wrongExpl:"Unique accommodation reviews with specific facility details (transparent roof, wood-burning stove, named food options) are authentic and valuable. Publish.",rating:5,prop:"The Glamping Dome",exp:"Hotels",date:"2024-12-19"},
+  {id:95,rIdx:4,title:"Doxxing staff home address",body:"The waiter who spilled drinks on me is named [NAME]. I found his home address at [ADDRESS] and will be sending him the dry-cleaning bill personally. I hope his neighbours know what kind of person he is.",correct:'moderation_remove',expl:"Contains personal home address of a staff member — doxxing. Moderation Remove immediately.",wrongExpl:"Publishing a staff member's home address with the stated intention of contacting their neighbours is doxxing. This must be removed immediately regardless of the underlying complaint about a spilled drink.",rating:1,prop:"The Doxxing Venue",exp:"Hotels",date:"2024-12-25"},
+  {id:96,rIdx:5,title:"Snorkelling resort with house reef",body:"The house reef was the highlight — accessible directly from the beach with incredible visibility and diverse marine life. The dive instructors were PADI certified, patient and knowledgeable. Perfect for beginner divers.",correct:'publish',expl:"Specific genuine activity-focused resort review. Publish.",wrongExpl:"Dive and snorkelling reviews with specific certifications, visibility observations, and instructor detail are niche but valuable content. Publish.",rating:5,prop:"The Reef Resort",exp:"Hotels",date:"2025-01-01"},
+  {id:97,rIdx:6,title:"Sales manager admitting room fraud",body:"I am the sales manager of this hotel and I have been deliberately selling standard rooms as superior rooms to maximise occupancy. All 'superior room' reviews are from people who got standard rooms.",correct:'moderation_remove',expl:"Staff member admitting to fraudulent room misrepresentation — Moderation Remove and escalate.",wrongExpl:"A staff member confessing to systematic consumer fraud is an escalation-level issue. Remove the content and escalate to Trust & Safety and legal for immediate investigation.",rating:5,prop:"The Category Hotel",exp:"Hotels",date:"2025-01-07"},
+  {id:98,rIdx:7,title:"Business traveller facilities review",body:"The hotel business centre was available 24/7 which was crucial for my timezone. Printing, scanning and video conferencing all worked flawlessly. The ergonomic desk in the room was a thoughtful touch.",correct:'publish',expl:"Specific genuine business traveller review focusing on work facilities. Publish.",wrongExpl:"Business facility reviews with specific named amenities (24/7 access, ergonomic desk, named tech) are valuable for corporate travellers. Publish.",rating:4,prop:"The Work Hotel",exp:"Hotels",date:"2025-01-13"},
+  {id:99,rIdx:8,title:"Former employee reporting review bribery",body:"I am a former employee of this hotel. The owner regularly offered staff bonuses of $50 for every 5-star review they could generate from their personal networks. I witnessed this for two years.",correct:'property_fraud',expl:"Former employee reporting systematic bribery for fake reviews — Property Fraud Remove.",wrongExpl:"A first-person account from a former employee describing systematic bribery for fake reviews over two years is Property Fraud. Remove and escalate for investigation.",rating:1,prop:"The Bribe Hotel",exp:"Hotels",date:"2025-01-19"},
+  {id:100,rIdx:9,title:"Comprehensive 14-night review",body:"Fourteen nights at this resort gave me a thorough picture. The property is impeccably maintained, food consistently excellent, staff unfailingly warm and the location genuinely unbeatable. One of the finest hotels in thirty years of travel.",correct:'publish',expl:"Comprehensive review after a long stay from an experienced traveller. Extremely high credibility. Publish.",wrongExpl:"A 14-night stay combined with 30 years of travel experience represents the highest-credibility reviewer profile. Detailed and balanced. Publish.",rating:5,prop:"The Perfect Stay Hotel",exp:"Hotels",date:"2025-01-25"},
+  // ── Published Bangkok hotel reviews (ids 101-105) ──
+  {id:101,rIdx:0,title:"Mon's kindness made all the difference",body:"As a wheelchair user, accessibility can sometimes be challenging, even in small moments like getting a morning coffee. During my stay at Kimpton Maa-Lai Bangkok, the complimentary morning coffee and tea station was a bit too high for me to reach independently. What truly made the experience special was the kindness of Mon. He immediately noticed my difficulty and stepped in without hesitation — picking up the glass, pouring the coffee, and opening three brown sugar packets into my drink. He assisted me with genuine care and warmth. It may seem like a small gesture, but moments like this make a huge difference.",correct:'publish',expl:"Genuine, specific review naming a staff member and describing a detailed personal accessibility experience. Publish.",wrongExpl:"This is a first-person accessibility review with a named staff member (Mon), specific acts of service, and authentic personal detail. Every element confirms genuine experience. Removing it suppresses valuable accessibility feedback.",rating:5,prop:"Kimpton Maa-Lai Bangkok",exp:"Hotels",date:"2024-11-10"},
+  {id:102,rIdx:1,title:"The best hotel in the world",body:"The best hotel I've ever been to!!! The service is amazing. The hotel is beautiful and clean. The rooms are spotless. The breakfast is wow!!!!! I am a hotelier and I know what I'm saying!!",correct:'publish',expl:"Enthusiastic genuine review from a self-identified hospitality professional. Publish.",wrongExpl:"The reviewer identifies as a hotelier which lends professional credibility. The claims are consistent and there are no commercial links, spam, or policy violations. Publish.",rating:5,prop:"Luxury Bangkok Hotel",exp:"Hotels",date:"2024-11-12"},
+  {id:103,rIdx:2,title:"I feel appreciated",body:"Grape was great to work with. I stay here often and at other IHG properties outside of Thailand. I appreciate that my loyalty is recognized and the friendly and helpful attitude that I experience. I always look forward to my stays here. The best experience I've had in my life.",correct:'publish',expl:"Genuine loyalty review naming a specific staff member and referencing a hotel brand loyalty programme. Publish.",wrongExpl:"This review names a specific staff member (Grape), references the IHG loyalty programme, and describes a recurring personal experience. These specifics confirm authenticity. Publish.",rating:5,prop:"IHG Property Bangkok",exp:"Hotels",date:"2024-11-14"},
+  {id:104,rIdx:3,title:"Unforgettable majestic oasis",body:"We had a truly remarkable stay in this awesome hotel. Pleasant room. Great food. Super cool architecture. Wonderful staff members. Very relaxing. Top-notch experience. Highly recommended. A special thanks to Khun Wantana and Khun Khumpol.",correct:'publish',expl:"Genuine review naming specific staff members with correct Thai honorifics. Publish.",wrongExpl:"The review names two staff members using the correct Thai honorific 'Khun', which would not appear in a bot-generated review. This detail alone confirms authenticity. Publish.",rating:5,prop:"Bangkok Oasis Hotel",exp:"Hotels",date:"2024-11-16"},
+  {id:105,rIdx:4,title:"Royal Orchid is an amazing place to stay",body:"Royal Orchid is an amazing place to stay. If you're not happy with the team here, there is something up with you. Great people, service unbelievable, food amazing, very friendly atmosphere, lovely gym and pool and right in the centre for all the fun trips around Bangkok.",correct:'publish',expl:"Genuine enthusiastic review of a named Bangkok property with specific facility mentions. Publish.",wrongExpl:"The review names a specific property (Royal Orchid), mentions specific facilities (gym, pool), and references the Bangkok location context. Despite informal phrasing, this is clearly a genuine guest review. Publish.",rating:5,prop:"Royal Orchid Bangkok",exp:"Hotels",date:"2024-11-18"},
+  // ── Moderation Remove scenarios matching all 17 reason types ──
+  {id:106,rIdx:5,title:"I used AI to write this review",body:"I asked an AI to write this review for me based on some notes I typed. The AI produced this perfectly structured 5-star review with beautiful language describing the hotel's amenities, staff warmth, and excellent dining. I didn't actually stay here — I just thought it would be funny to post an AI-generated review.",correct:'moderation_remove',expl:"Reviewer admits this is AI-generated with no genuine stay. Moderation Remove: AI Generated.",wrongExpl:"Publishing AI-generated content without genuine experience behind it pollutes the review ecosystem. The reviewer admits no stay occurred. Moderation Remove: AI Generated.",rating:5,prop:"Grand Central Bangkok",exp:"Hotels",date:"2024-11-20"},
+  {id:107,rIdx:6,title:"Full disclosure — I work for the PR agency",body:"I am a digital marketing consultant hired by the hotel's PR agency to write positive reviews. This is a paid engagement and I am posting multiple 5-star reviews across platforms as part of a promotional campaign for the hotel's relaunch.",correct:'moderation_remove',expl:"Reviewer openly discloses a paid commercial affiliation. Moderation Remove: Affiliation Stated in Review.",wrongExpl:"A reviewer disclosing they are paid to write promotional content invalidates the review entirely. This is a commercial transaction presented as authentic feedback. Moderation Remove: Affiliation Stated in Review.",rating:5,prop:"Mango Bay Resort",exp:"Hotels",date:"2024-11-21"},
+  {id:108,rIdx:7,title:"Management has been defrauding guests for years",body:"I have verified evidence that the general manager has been systematically overcharging guests on final bills and pocketing cash payments. I have bank statements proving over 300 instances across at least three years at this property.",correct:'moderation_remove',expl:"Serious unverified fraud allegations against named management. Moderation Remove: Allegation of Fraud.",wrongExpl:"Allegations of systematic financial fraud of this magnitude require Trust & Safety and legal review before publication. Publishing unverified criminal fraud allegations could expose the platform to defamation liability.",rating:1,prop:"The Harbour Suite Hotel",exp:"Hotels",date:"2024-11-22"},
+  {id:109,rIdx:8,title:"Book direct for exclusive summer rates",body:"This hotel is great! Also — you can get our exclusive corporate discount by booking at [directbooking-promo.com] and using code SUMMER30 for 30% off. We guarantee the lowest rates and include free airport transfer. Call +66-800-PROMO now!",correct:'moderation_remove',expl:"Commercial promotion with external booking URL and phone number. Moderation Remove: Commercial.",wrongExpl:"This review contains a promotional external URL, a discount code, a phone number, and a commercial guarantee statement. The commercial intent is explicit — Moderation Remove: Commercial.",rating:5,prop:"Bangkok Riverside Hotel",exp:"Hotels",date:"2024-11-23"},
+  {id:110,rIdx:9,title:"Outstanding property — excellent in every way",body:"Outstanding property with exceptional service. The rooms were comfortable and well-appointed. Dining options were varied and high quality. Staff were professional and attentive. Location was convenient for major attractions. Would highly recommend to all travellers.",correct:'moderation_remove',expl:"Generic custom bulk template with no property-specific details. Moderation Remove: Custom Bulk Template.",wrongExpl:"This text matches a known bulk template pattern — every sentence is generic and interchangeable across any property with no specific details. This is a template review submitted as part of a bulk campaign.",rating:5,prop:"Standard Business Hotel",exp:"Hotels",date:"2024-11-24"},
+  {id:111,rIdx:0,title:"Great stay — would definitely recommend",body:"My stay was absolutely wonderful. The hotel exceeded my expectations in every way. The service was impeccable, the rooms were spotless, and the food was delicious. I will definitely return and highly recommend to everyone.",correct:'moderation_remove',expl:"Custom template review with zero property-specific details. Moderation Remove: Custom Template.",wrongExpl:"This text is a standard positive review template that could apply to any property anywhere. There are no specific staff names, room details, dishes, or incidents mentioned. It is clearly a Custom Template.",rating:5,prop:"City Gateway Hotel",exp:"Hotels",date:"2024-11-25"},
+  {id:112,rIdx:1,title:"Hotel illegally collected biometric data at check-in",body:"During check-in, the hotel required my passport details, a biometric facial recognition scan, and access to my social media accounts in a way that appears to violate data protection laws. I did not fully consent and my data was shared with third parties without disclosure.",correct:'moderation_remove',expl:"Review alleging specific data protection law violations. Moderation Remove: DC Policy.",wrongExpl:"Allegations of specific data protection law violations require legal review before publication to assess accuracy and potential regulatory implications for the platform.",rating:1,prop:"The Tech-Forward Hotel",exp:"Hotels",date:"2024-11-26"},
+  {id:113,rIdx:2,title:"The staff from that country were all the same",body:"The cleaning staff — all from a specific neighbouring country — were consistently rude and dishonest. I caught one going through my belongings. Properties should not be hiring foreigners for guest-facing roles. They simply do not understand our standards.",correct:'moderation_remove',expl:"Contains discriminatory language targeting staff by national origin. Moderation Remove: Discriminatory Language.",wrongExpl:"Attributing negative character traits to an entire nationality and calling for employment discrimination is discriminatory language under platform policy. This must be removed regardless of any underlying complaint.",rating:1,prop:"The Expat Hotel",exp:"Hotels",date:"2024-11-27"},
+  {id:114,rIdx:3,title:"Brilliant hotel — third time posting this",body:"Amazing hotel great service wonderful food beautiful rooms friendly staff highly recommend 5 stars best hotel in Bangkok perfect location great value would return.",correct:'moderation_remove',expl:"Identical text submitted three times by same account for same property. Moderation Remove: Duplicate.",wrongExpl:"System records show this identical review has been submitted three times by the same account for the same property. Duplicate submissions are removed regardless of content quality.",rating:5,prop:"The Orchid Bangkok",exp:"Hotels",date:"2024-11-28"},
+  {id:115,rIdx:4,title:"Reviewing my stay from two years ago",body:"I stayed here back in 2021 and remember it being quite nice. The pool was large, the breakfast had a good selection, and the staff were polite. Can't remember much else now but thought I'd write it up. Things may have changed significantly since then.",correct:'moderation_remove',expl:"Review of a stay explicitly more than one year ago with self-admitted memory gaps. Moderation Remove: Experience >1 Year.",wrongExpl:"This review explicitly states the experience was in 2021 and the reviewer acknowledges their memory is limited. Stale reviews do not accurately reflect current property standards. Moderation Remove: Experience >1 Year.",rating:3,prop:"The Bangkok Poolside",exp:"Hotels",date:"2024-11-29"},
+  {id:116,rIdx:5,title:"luuuuv dis hotel omg best evr no cap",body:"Styed her 4nite gr8 rms!!! luuuv it xcellent s3rv1ce nd br3akfast omg 2 gud 2 b tru defntly cming bck 10/10 wud rcmmnd 2 evry1 no cap fr fr the vybz r immaculate bestestplace ever",correct:'moderation_remove',expl:"Review text is largely incomprehensible and cannot be evaluated. Moderation Remove: Hard to Read.",wrongExpl:"Reviews must be legible to serve future guests. This review uses text-speak and number substitutions that render it unreadable and without informational value for platform users. Moderation Remove: Hard to Read.",rating:5,prop:"Hip Bangkok Hostel",exp:"Hotels",date:"2024-11-30"},
+  {id:117,rIdx:6,title:"Staff were selling illegal substances from service corridor",body:"I personally witnessed hotel staff selling illegal substances to guests from a service corridor on the fourth floor. I reported this to the front desk manager who denied all knowledge. I later saw the same manager accepting payment. I have photos.",correct:'moderation_remove',expl:"Allegations of staff illegal activity require Trust & Safety and legal review. Moderation Remove: Illegal Activity.",wrongExpl:"Allegations of staff-facilitated illegal sales require Trust & Safety escalation before publication. The reviewer claims photographic evidence — this must be referred to the appropriate team rather than published directly.",rating:1,prop:"The Night Scene Hotel",exp:"Hotels",date:"2024-12-01"},
+  // ── Member Fraud Remove scenarios matching all 14 reason types ──
+  {id:118,rIdx:7,title:"Give me a refund or I release the footage",body:"I told the GM: issue me a full refund and a complimentary suite upgrade or I will release video footage of the plumbing failure in my room to every travel media outlet and flood this listing with 1-star reviews from my network. You have 24 hours.",correct:'member_fraud',expl:"Explicit blackmail threat using reviews and media as leverage. Member Fraud Remove: Blackmail.",wrongExpl:"This is textbook Blackmail — the reviewer explicitly threatens coordinated reputational damage and media exposure unless financial demands are met. Member Fraud Remove: Blackmail.",rating:1,prop:"The Prestige Tower Hotel",exp:"Hotels",date:"2024-12-02"},
+  {id:119,rIdx:8,title:"Writing this as a current staff member",body:"I work in the housekeeping department here and wanted to give my honest assessment of the property from someone who sees it every day. The management is terrible, the working conditions are poor, and the guests are often rude to the staff. Do not stay here.",correct:'member_fraud',expl:"Review posted by a current employee — not a guest experience. Member Fraud Remove: Current/Ex-Employee.",wrongExpl:"Reviews must be based on genuine guest experiences. Current employees cannot post reviews about their own workplace. This must be removed under the employee review policy. Member Fraud Remove: Current/Ex-Employee.",rating:1,prop:"The Grand Staff Hotel",exp:"Hotels",date:"2024-12-03"},
+  {id:120,rIdx:9,title:"Reposting my previously removed review",body:"My 1-star review was removed last week citing policy violations but I disagree. Everything I wrote was true and I am reposting the exact same content: the manager is corrupt, the food made our group ill, and guests are routinely deceived on pricing.",correct:'member_fraud',expl:"Reviewer explicitly resubmitting previously removed content. Member Fraud Remove: Deceptive Resubmission.",wrongExpl:"Deliberately resubmitting content that was previously removed under platform policy is Deceptive Resubmission. The reviewer explicitly acknowledges the prior removal and their intent to circumvent it.",rating:1,prop:"The Policy Hotel",exp:"Hotels",date:"2024-12-04"},
+  {id:121,rIdx:0,title:"Test review planted to check moderation speed",body:"This is a seeding review planted to test the platform's moderation response time. I am a researcher studying how quickly fake positive reviews are detected. If this review stays live for more than 48 hours, it proves the system is inadequate.",correct:'member_fraud',expl:"Reviewer admits planting a test/decoy review without a genuine stay. Member Fraud Remove: Decoy/Seeding.",wrongExpl:"Deliberately planting fake reviews to probe the moderation system is a Decoy/Seeding pattern. The reviewer admits no genuine stay occurred. Remove regardless of the stated research intent.",rating:5,prop:"Test Property Bangkok",exp:"Hotels",date:"2024-12-05"},
+  {id:122,rIdx:1,title:"They kicked me out and now I'll make them pay",body:"I was asked to leave this property after a dispute. The staff sided against me without hearing my side. I am furious and I am going to make sure this hotel suffers. I will keep posting reviews until they acknowledge they were wrong.",correct:'member_fraud',expl:"Review motivated by personal grievance with stated intent to continue posting. Member Fraud Remove: Disgruntled Customer.",wrongExpl:"The reviewer explicitly states their motivation is retaliation and declares intent to post multiple reviews as revenge. This pattern defines the Disgruntled Customer Member Fraud category.",rating:1,prop:"The Dispute Hotel",exp:"Hotels",date:"2024-12-06"},
+  {id:123,rIdx:2,title:"Worst hotel — throwaway account",body:"Worst hotel experience of my life. The manager is dishonest, the rooms are filthy, and the food is dangerous. [Account registered with: temp-mail-3847@trashmail.io — disposable email service, account created 4 minutes before this post]",correct:'member_fraud',expl:"Review posted from a temporary disposable email address. Member Fraud Remove: Temporary Email.",wrongExpl:"Reviews from temporary or disposable email services cannot be verified as genuine accounts. This pattern is associated with coordinated attack campaigns where temporary accounts are created solely to post negative reviews.",rating:1,prop:"The Clean Hotel",exp:"Hotels",date:"2024-12-07"},
+  {id:124,rIdx:3,title:"Amazing hotel — copied from a Phuket listing",body:"Amazing hotel! The lobby is breathtaking with its soaring ceilings and intricate artwork. The pool deck offers stunning views. The spa treatments were world-class. [This exact text matches a previously published review for a different property in Phuket with no changes]",correct:'member_fraud',expl:"Review text is copied verbatim from another property listing. Member Fraud Remove: Plagiarized Content.",wrongExpl:"Plagiarised review content copied from another property cannot accurately represent this location. The system matched this text to a previous listing — Plagiarized Content Member Fraud.",rating:5,prop:"The River View Bangkok",exp:"Hotels",date:"2024-12-08"},
+  {id:125,rIdx:4,title:"We are a reputation management agency",body:"We are a reputation management company and post reviews for our hospitality clients across multiple platforms. This review was written by our team for this property as part of their monthly retainer package. The content reflects the hotel's key marketing messages.",correct:'member_fraud',expl:"Explicit commercial promotion fraud by a reputation management agency. Member Fraud Remove: Promotion Fraud.",wrongExpl:"A third-party agency posting fabricated reviews on behalf of clients is Promotion Fraud — one of the most serious Member Fraud violations. The explicit disclosure removes any ambiguity.",rating:5,prop:"The Marketing Hotel",exp:"Hotels",date:"2024-12-09"},
+  // ── Property Fraud Remove scenarios matching all 7 reason types ──
+  {id:126,rIdx:5,title:"Five stars — part of the owner's review network",body:"Brilliant hotel, absolutely recommend staying here. [System: this account is linked to 47 other 5-star reviews for this property posted within the same 72-hour window from IP addresses geolocated to the hotel's own WiFi network]",correct:'property_fraud',expl:"47 fake positive reviews from the property's own WiFi network. Property Fraud Remove: Confirmed Boosting.",wrongExpl:"47 five-star reviews posted within 72 hours from the hotel's own WiFi is Confirmed Boosting — systematic manipulation of the property's rating. Property Fraud Remove and escalate for investigation.",rating:5,prop:"The Boosted Hotel",exp:"Hotels",date:"2024-12-10"},
+  {id:127,rIdx:6,title:"Free night given in exchange for this review",body:"The front desk manager approached us at checkout and offered a complimentary night on our next visit if we posted a 5-star review before leaving. We accepted. The stay was adequate but we would not have given 5 stars without the offer.",correct:'property_fraud',expl:"Property explicitly offered compensation in exchange for a positive review. Property Fraud Remove: Confirmed Incentives.",wrongExpl:"The hotel offered a complimentary night as a direct exchange for a 5-star review. This is Confirmed Incentives. The reviewer's own admission that the rating would have been lower confirms the review is not genuine.",rating:5,prop:"The Incentive Hotel",exp:"Hotels",date:"2024-12-11"},
+  {id:128,rIdx:7,title:"I am flooding this listing with negatives",body:"I had a billing dispute with this hotel six months ago and they refused to refund me. Since then I have been posting 1-star reviews under different accounts every week. I will continue until they acknowledge their mistake and issue a full refund.",correct:'property_fraud',expl:"Coordinated multi-account vandalism campaign against a specific property. Property Fraud Remove: Confirmed Vandalism.",wrongExpl:"The reviewer openly admits to a sustained multi-account 1-star review vandalism campaign. This is Confirmed Vandalism — systematic coordinated attacks designed to damage a property's rating.",rating:1,prop:"The Target Hotel",exp:"Hotels",date:"2024-12-12"},
+  {id:129,rIdx:8,title:"Hotel threatened legal action over my 2-star review",body:"After I posted my honest 2-star review about the disappointing breakfast and noisy room, the hotel's lawyer sent a formal letter threatening defamation proceedings unless I delete my review and replace it with a 5-star one within 7 days.",correct:'property_fraud',expl:"Property using legal threats to coerce a guest into replacing a genuine review. Property Fraud Remove: Owner Bullying Member.",wrongExpl:"Using formal legal correspondence to intimidate a guest into removing a legitimate review and replacing it with a fabricated positive one is Owner Bullying Member — a serious Property Fraud category.",rating:2,prop:"The Legal Hotel",exp:"Hotels",date:"2024-12-13"},
+  {id:130,rIdx:9,title:"Great property — cluster of accounts same building",body:"Amazing place — absolutely loved it! [System: this account shares a device fingerprint and IP with 12 other accounts that posted 5-star reviews for this property in the past month. All accounts have no review history elsewhere.]",correct:'property_fraud',expl:"Cluster of accounts with no history outside this property showing suspected coordinated boosting. Property Fraud Remove: Suspected Boosting.",wrongExpl:"Accounts with no activity outside this property, sharing device fingerprints, all posting 5-star reviews in a short window constitutes Suspected Boosting. Property Fraud Remove.",rating:5,prop:"The Cluster Hotel",exp:"Hotels",date:"2024-12-14"},
+];
+
+const REVIEWERS=[
+  {display:'James Harrington',email:'james.h@gmail.com',username:'jharrington92',memberId:'M-44821',location:'New York, USA'},
+  {display:'Sophia Laurent',email:'sophia.l@yahoo.fr',username:'sophialaurent',memberId:'M-33019',location:'Paris, France'},
+  {display:'Ravi Kumar',email:'ravi.k@outlook.com',username:'ravikumar88',memberId:'M-55672',location:'Mumbai, India'},
+  {display:'Emma Christiansen',email:'emma.c@gmail.dk',username:'emmac_dk',memberId:'M-21098',location:'Copenhagen, Denmark'},
+  {display:'Carlos Mendoza',email:'carlos.m@hotmail.com',username:'carlosmx',memberId:'M-67341',location:'Mexico City, Mexico'},
+  {display:'Yuki Tanaka',email:'yuki.t@docomo.ne.jp',username:'yukitanaka',memberId:'M-88201',location:'Tokyo, Japan'},
+  {display:'Amara Osei',email:'amara.o@gmail.com',username:'amaraosei',memberId:'M-12543',location:'Accra, Ghana'},
+  {display:'Lena Müller',email:'lena.m@web.de',username:'lenamueller',memberId:'M-39087',location:'Berlin, Germany'},
+  {display:'Priya Sharma',email:'priya.s@gmail.com',username:'priyasharma',memberId:'M-74502',location:'Delhi, India'},
+  {display:'Tom Bakker',email:'tom.b@kpn.nl',username:'tombakker',memberId:'M-61234',location:'Amsterdam, Netherlands'},
+];
+
+/* ── Masking ── */
+function mask(v,n=3){if(!v||v.length<=n)return'×'.repeat(v?v.length:3);return v.slice(0,n)+'×'.repeat(Math.min(v.length-n,6));}
+function maskEmail(e){const[u,d]=e.split('@');return mask(u,2)+'@'+mask(d,2);}
+function maskId(id){return id.slice(0,3)+'×'.repeat(id.length-3);}
+function maskNum(n){const s=String(n);return s.slice(0,3)+'×'.repeat(Math.max(s.length-3,4));}
+
+/* ── State ── */
+let empId='',empName='',selectedDay=0;
+let currentQueue='incoming';
+let activeQBank=[];
+let currentQIdx=0;
+let score=0,timerVal=300,timerInterval=null,answered=false;
+let startTime=null,telemetry=[],sessionLog=[];
+let currentReviewerEmail='';
+
+/* ── Day info ── */
+const DAY_DESCRIPTIONS={
+  1:'Focuses on evaluating review authenticity — identifying genuine, specific, original reviews vs. generic template content.',
+  2:'Focuses on detecting incentivised reviews, sockpuppet networks, and coordinated fake positive schemes.',
+  3:'Focuses on identifying hate speech, racial discrimination, and xenophobic content targeting individuals or groups.',
+  4:'Focuses on detecting privacy violations including doxxing, personal data exposure, and identity disclosure.',
+  5:'Focuses on identifying commercial spam, affiliate links, and content designed to divert users from Tripadvisor.',
+  6:'Focuses on evaluating health, hygiene, and safety reports within travel reviews.',
+  7:'Focuses on detecting threatening language, violent content, and intimidation in reviews.',
+  8:'Focuses on identifying sexually explicit, graphic, and adult content policy violations.',
+  9:'Focuses on Property Fraud patterns including competitor attacks, owner impersonation, and coercion.',
+  10:'Focuses on Member Fraud including bot activity, account impersonation, and coordinated attacks.',
+};
+
+function onDayChange(){
+  const sel=document.getElementById('login-day');
+  const box=document.getElementById('day-info-box');
+  const v=parseInt(sel.value);
+  if(v&&DAYS[v]){
+    box.style.display='block';
+    box.innerHTML=`<strong>${DAYS[v].name}</strong><br>${DAY_DESCRIPTIONS[v]}`;
+  } else {
+    box.style.display='none';
+  }
+  validateLogin();
+}
+
+/* ── Login validation ── */
+const elEmpId=document.getElementById('login-empid');
+const elName=document.getElementById('login-name');
+const elLaunch=document.getElementById('btn-launch');
+function validateLogin(){
+  const id=elEmpId.value.trim(),name=elName.value.trim(),day=document.getElementById('login-day').value;
+  const idOk=/^[a-zA-Z0-9\-]{3,20}$/.test(id);
+  const nameOk=name.length>=2;
+  const dayOk=!!day;
+  document.getElementById('empid-err').style.display=idOk||!id?'none':'block';
+  elEmpId.classList.toggle('invalid',!idOk&&!!id);
+  document.getElementById('name-err').style.display=nameOk||!name?'none':'block';
+  elLaunch.disabled=!(idOk&&nameOk&&dayOk);
+}
+elEmpId.addEventListener('input',validateLogin);
+elName.addEventListener('input',validateLogin);
+
+function goOnboarding(){
+  empId=elEmpId.value.trim();
+  empName=elName.value.trim();
+  selectedDay=parseInt(document.getElementById('login-day').value);
+  const day=DAYS[selectedDay];
+  document.getElementById('onboard-day-tag').textContent='Day '+selectedDay;
+  document.getElementById('onboard-day-title').textContent=day.name;
+  document.getElementById('onboard-desc').textContent='You will be presented with 15 randomly selected reviews from the Day '+selectedDay+' question bank ('+day.name+'). Each question has 5 minutes to answer.';
+  document.getElementById('phase-login').style.display='none';
+  document.getElementById('phase-onboarding').style.display='flex';
+}
+
+function goWorkspace(){
+  document.getElementById('phase-onboarding').style.display='none';
+  document.getElementById('phase-workspace').style.display='flex';
+  document.getElementById('sub-reviewer-id').textContent='Reviewer: '+maskId(empId);
+  document.getElementById('classifier-val').textContent=empName;
+  document.getElementById('day-mode-badge').textContent='Day '+selectedDay+' — '+DAYS[selectedDay].name;
+  buildDayBank();
+  loadQuestion();
+  startTimer();
+}
+
+/* ── Build question bank for selected day ── */
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+
+function buildDayBank(){
+  const day=DAYS[selectedDay];
+  // Get unique IDs, dedupe
+  const idSet=new Set(day.ids);
+  // Also filter by current queue type
+  let pool=FULL_BANK.filter(q=>idSet.has(q.id));
+  if(currentQueue==='reported') pool=pool.filter(q=>q.reported);
+  else pool=pool.filter(q=>!q.reported);
+  // Fallback: if filtered pool is too small, use all day IDs
+  if(pool.length<5) pool=FULL_BANK.filter(q=>idSet.has(q.id));
+  pool=shuffle([...pool]);
+  activeQBank=pool.slice(0,Math.min(15,pool.length));
+  currentQIdx=0;score=0;answered=false;
+  telemetry=[];sessionLog=[];
+  updateScore();
+  updateSampleIdsDropdown();
+}
+
+function updateSampleIdsDropdown(){
+  const sel=document.getElementById('sample-ids-select');
+  sel.innerHTML='<option value="">— Question IDs —</option>';
+  activeQBank.forEach((q,i)=>{
+    const opt=document.createElement('option');
+    opt.value=i;
+    opt.textContent='REV-'+String(q.id).padStart(5,'0')+' — '+q.title.slice(0,28)+(q.title.length>28?'…':'');
+    sel.appendChild(opt);
+  });
+}
+
+function jumpToQById(sel){
+  const idx=parseInt(sel.value);
+  if(isNaN(idx)) return;
+  // Req #5: must answer before jumping
+  if(!answered){
+    showMustSelectToast();
+    sel.value='';
+    return;
+  }
+  currentQIdx=idx;
+  sel.value='';
+  hideFeedback();
+  loadQuestion();
+  startTimer();
+}
+
+function switchQueue(type,btn){
+  if(currentQueue===type)return;
+  currentQueue=type;
+  document.querySelectorAll('.sidenav-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const badge=document.getElementById('queue-mode-badge');
+  if(type==='incoming'){
+    badge.textContent='Incoming';
+    badge.style.cssText='background:#e8f5e9;color:#15803d;border:1px solid #bbf7d0;padding:2px 8px;border-radius:16px;font-size:9px;font-weight:700;';
+  } else {
+    badge.textContent='Reported';
+    badge.style.cssText='background:#fef2f2;color:#c0392b;border:1px solid #fecaca;padding:2px 8px;border-radius:16px;font-size:9px;font-weight:700;';
+  }
+  clearInterval(timerInterval);
+  buildDayBank();
+  loadQuestion();
+  startTimer();
+}
+
+/* ── Load question ── */
+function loadQuestion(){
+  answered=false;
+  if(currentQIdx>=activeQBank.length){endAssessment();return;}
+  const q=activeQBank[currentQIdx];
+  const rev=REVIEWERS[q.rIdx%REVIEWERS.length];
+  currentReviewerEmail=rev.email;
+  const qNum=currentQIdx+1,total=activeQBank.length;
+  // Show Owner Response section only for Reported queue questions
+  const isReported = currentQueue==='reported';
+  const hasOwnerResponse = isReported && q.ownerResponse;
+  document.getElementById('owner-review-label').style.display = isReported ? 'block' : 'none';
+  const ownerEl = document.getElementById('owner-review');
+  ownerEl.style.display = isReported ? 'block' : 'none';
+  ownerEl.value = hasOwnerResponse ? q.ownerResponse : '';
+  ownerEl.readOnly = !!hasOwnerResponse;
+  ownerEl.style.opacity = hasOwnerResponse ? '1' : '0.7';
+  ownerEl.style.cursor = hasOwnerResponse ? 'default' : 'text';
+  document.getElementById('ws-qnum').textContent='Q '+qNum+' / '+total;
+  document.getElementById('sub-url-id').textContent=String(q.id).padStart(5,'0');
+  document.getElementById('ws-progress').style.width=((currentQIdx/total)*100)+'%';
+  document.getElementById('btn-prev').disabled=currentQIdx===0;
+  document.getElementById('lang-select').value='English';
+
+  // Reviewer info — masked (Req #1)
+  document.getElementById('reviewer-data').innerHTML=`
+    <div class="info-row"><span class="info-lbl">Display:</span><span class="info-val">${mask(rev.display,4)}</span></div>
+    <div class="info-row"><span class="info-lbl">Email:</span><span class="info-val masked">${maskEmail(rev.email)}</span></div>
+    <div class="info-row"><span class="info-lbl">Username:</span><span class="info-val">${mask(rev.username,3)}</span></div>
+    <div class="info-row"><span class="info-lbl">Member ID:</span><span class="info-val masked">${maskId(rev.memberId)}</span></div>
+    <div class="info-row"><span class="info-lbl">Password:</span><span class="info-val">••••••••</span></div>
+    <div class="info-row"><span class="info-lbl">Location:</span><span class="info-val">${mask(rev.location,3)}</span></div>
+  `;
+
+  const acctAge=(Math.random()*10+1).toFixed(1);
+  const totalRevs=Math.floor(Math.random()*200+5);
+  const pub=Math.floor(totalRevs*.8),susp=Math.floor(totalRevs*.1),sub=totalRevs-pub-susp;
+  const isBanned=q.id%11===0;
+  document.getElementById('body-karma').innerHTML=`
+    <div class="karma-row"><span class="karma-lbl">Account Age</span><span class="karma-val">${acctAge} yrs</span></div>
+    <div class="karma-row"><span class="karma-lbl">Ban Status</span><span class="karma-val">${isBanned?'<span class="ban-badge">Banned</span>':'<span class="clean-badge">Active</span>'}</span></div>
+    <div class="karma-row"><span class="karma-lbl">Reviews Total</span><span class="karma-val">${totalRevs}</span></div>
+    <div class="karma-row"><span class="karma-lbl">Published</span><span class="karma-val">${pub}</span></div>
+    <div class="karma-row"><span class="karma-lbl">Suspicious</span><span class="karma-val">${susp}</span></div>
+    <div class="karma-row"><span class="karma-lbl">Submitted</span><span class="karma-val">${sub}</span></div>
+  `;
+
+  const tzs=['UTC+0','UTC+1','UTC+5:30','UTC−5','UTC+8','UTC+9'];
+  const ips=['19×.×.×.'+Math.floor(Math.random()*255),'10.×.×.'+Math.floor(Math.random()*255),'172.×.'+Math.floor(Math.random()*30)+'.×'];
+  document.getElementById('device-data').innerHTML=`
+    <div class="info-row"><span class="info-lbl">Device:</span><span class="info-val masked">DEV-${maskNum(Math.floor(Math.random()*9e8+1e8))}</span></div>
+    <div class="info-row"><span class="info-lbl">Mobile:</span><span class="info-val masked">+${maskNum(Math.floor(Math.random()*9e9+1e10))}</span></div>
+    <div class="info-row"><span class="info-lbl">IP:</span><span class="info-val masked">${ips[Math.floor(Math.random()*3)]}</span></div>
+    <div class="info-row"><span class="info-lbl">Facebook:</span><span class="info-val">${Math.random()>.5?'Linked':'Not linked'}</span></div>
+    <div class="info-row"><span class="info-lbl">Timezone:</span><span class="info-val">${tzs[Math.floor(Math.random()*tzs.length)]}</span></div>
+    <div class="info-row"><span class="info-lbl">Cookies:</span><span class="info-val">${Math.random()>.3?'Accepted':'Declined'}</span></div>
+  `;
+
+  // Build member history sections (Req #7)
+  buildMemberHistory(rev,q);
+
+  const stars=q.rating;
+  const bs=n=>Array.from({length:5},(_,i)=>`<span class="star${i<n?'':' empty'}">★</span>`).join('');
+  const cats=['Legroom','Seat Comfort','Entertainment','Service','Value'];
+  const rBars=cats.map(c=>{const v=Math.floor(Math.random()*5+1);return`<div class="rating-row"><span>${c}</span><div class="rating-bar"><div class="rating-fill" style="width:${v*20}%"></div></div></div>`;}).join('');
+  document.getElementById('body-revinfo').innerHTML=`
+    <div class="karma-row"><span class="karma-lbl">Submission</span><span class="karma-val">${q.date}</span></div>
+    <div class="karma-row"><span class="karma-lbl">Experience</span><span class="karma-val">${q.exp}</span></div>
+    <div class="karma-row"><span class="karma-lbl">Property</span><span class="karma-val">${q.prop}</span></div>
+    <div class="karma-row"><span class="karma-lbl">Queue</span><span class="karma-val">${q.reported?'Reported':'Incoming'}</span></div>
+    <div class="karma-row"><span class="karma-lbl">Rating</span><span class="karma-val"><div class="star-row">${bs(stars)}</div></span></div>
+    ${rBars}
+  `;
+
+  const flights=['BA-441','LH-780','AF-123','EK-202','SQ-317'];
+  const deps=['LHR','JFK','CDG','DXB','SIN'],arrs=['LAX','ORD','AMS','BOM','NRT'];
+  const idx=q.id%5;
+  document.getElementById('locflight-data').innerHTML=`
+    <div class="info-row"><span class="info-lbl">Departure:</span><span class="info-val">${deps[idx]}</span></div>
+    <div class="info-row"><span class="info-lbl">Arrival:</span><span class="info-val">${arrs[idx]}</span></div>
+    <div class="info-row"><span class="info-lbl">Flight:</span><span class="info-val">${flights[idx]}</span></div>
+    <div class="info-row"><span class="info-lbl">Product:</span><span class="info-val">${['Economy','Business','First','Premium Eco'][q.id%4]}</span></div>
+    <div class="info-row"><span class="info-lbl">Booking:</span><span class="info-val masked">TA-B×${maskNum(Math.floor(Math.random()*9e5+1e5))}</span></div>
+    <div class="info-row"><span class="info-lbl">Stay:</span><span class="info-val">${Math.floor(Math.random()*7+1)} nights</span></div>
+  `;
+
+  document.getElementById('review-title-text').textContent=q.title;
+  document.getElementById('review-body-text').textContent=q.body;
+  document.getElementById('mod-comment').value='';
+  setActionsEnabled(true);
+  startTime=Date.now();
+  timerVal=300;
+  updateTimerDisplay();
+}
+
+/* ── Member History builder (Req #7) ── */
+function buildMemberHistory(rev,q){
+  const cities=['New York','Paris','London','Tokyo','Sydney','Berlin','Dubai','Mumbai','Toronto','Barcelona'];
+  const lTypes=['Hotel','Restaurant','Attraction','Activity','Airline'];
+  const statuses=['published','published','published','removed','removed'];
+  const genRows=(count,ipSame)=>{
+    let html='';
+    for(let i=0;i<count;i++){
+      const city=cities[Math.floor(Math.random()*cities.length)];
+      const ltype=lTypes[Math.floor(Math.random()*lTypes.length)];
+      const rating=Math.floor(Math.random()*5+1);
+      const isRemoved=Math.random()<.3;
+      const dateStr=`2024-${String(Math.floor(Math.random()*12+1)).padStart(2,'0')}-${String(Math.floor(Math.random()*28+1)).padStart(2,'0')}`;
+      const ip=ipSame?'19×.×.×.'+Math.floor(Math.random()*255):(Math.random()>.5?'10.×.×.'+Math.floor(Math.random()*255):'172.×.'+Math.floor(Math.random()*30)+'.×');
+      html+=`<div class="hist-row">
+        <div class="hist-row-head">
+          <span class="hist-id">REV-${String(Math.floor(Math.random()*9e4+1e4)).padStart(5,'0')}</span>
+          <span class="hist-loc">${city} · ${ltype}</span>
+        </div>
+        <div class="hist-title">"${['Great stay','Disappointing service','Highly recommend','Mixed experience','Excellent value','Poor hygiene','Outstanding staff','Average at best','Perfect location','Terrible experience'][i%10]}"</div>
+        <div class="hist-meta">
+          <span>★ ${rating}/5</span>
+          <span class="masked">${maskEmail(rev.email)}</span>
+          <span class="masked">${ip}</span>
+          <span>${dateStr}</span>
+          <span class="${isRemoved?'hist-rem':'hist-pub'}">${isRemoved?'Removed':'Published'}</span>
+        </div>
+      </div>`;
+    }
+    return html||'<div style="font-size:9px;color:var(--gray);padding:4px 0;">No records found.</div>';
+  };
+  document.getElementById('body-memhist-same-member').innerHTML=genRows(Math.floor(Math.random()*4+2),false);
+  document.getElementById('body-memhist-same-ip').innerHTML=genRows(Math.floor(Math.random()*3+1),true);
+  document.getElementById('body-memhist-same-cookie').innerHTML=genRows(Math.floor(Math.random()*3+1),false);
+  document.getElementById('body-memhist-fingerprint').innerHTML=genRows(Math.floor(Math.random()*2+1),false);
+  document.getElementById('body-memhist-verification').innerHTML=genRows(Math.floor(Math.random()*2+1),false);
+}
+
+function setActionsEnabled(en){
+  document.querySelectorAll('#right-action-btns button').forEach(b=>b.disabled=!en);
+}
+
+/* ── Timer (5 minutes per question) ── */
+function startTimer(){
+  clearInterval(timerInterval);
+  timerVal=300;updateTimerDisplay();
+  timerInterval=setInterval(()=>{
+    timerVal--;updateTimerDisplay();
+    if(timerVal<=0){clearInterval(timerInterval);if(!answered)timeOut();}
+  },1000);
+}
+
+function updateTimerDisplay(){
+  const el=document.getElementById('ws-timer');
+  const m=Math.floor(timerVal/60),s=timerVal%60;
+  el.textContent=m+':'+String(s).padStart(2,'0');
+  el.classList.toggle('warning',timerVal<=30);
+}
+
+function timeOut(){
+  answered=true;setActionsEnabled(false);
+  const q=activeQBank[currentQIdx];
+  score-=10;updateScore();
+  logT('timeout','',false,300000);
+  sessionLog.push({q:currentQIdx+1,decision:'timeout',correct:false,correctAnswer:q.correct});
+  showFeedback(false,'Time Expired','No answer submitted in time.',q.expl,q.correct,'');
+  shakeScreen();
+}
+
+/* ── Must-select toast (Req #5) ── */
+function showMustSelectToast(){
+  const t=document.getElementById('must-select-toast');
+  t.style.display='block';
+  setTimeout(()=>t.style.display='none',3200);
+}
+
+/* ── Decisions ── */
+function submitDecision(dec){if(answered)return;processDecision(dec,'');}
+
+/* Reason sets per action type (Changes 7, 8, 9) */
+const REASON_SETS = {
+  moderation_remove:[
+    'AI Generated','Affiliation Stated in Review','Allegation of Fraud','Commercial',
+    'Custom Bulk Template','Custom Template','DC Policy','Discriminatory Language',
+    'Duplicate','Experience >1 Year','Hard to Read','Illegal Activity',
+    'Impacted by Bug','Ineligible Experience','Irrelevant Commentary',
+    'Listing Update','Major Renovation'
+  ],
+  member_fraud:[
+    'Blackmail','Current / Ex-Employee','Deceptive Resubmission','Decoy / Seeding',
+    'Disgruntled Customer','Impersonation','Invalid Email','Nonsense / Spam',
+    'Plagiarized Content','Promotion Fraud','Review Bomb','Sideways Boosting',
+    'Sideways Marketing','Temporary Email'
+  ],
+  property_fraud:[
+    'Confirmed Boosting','Confirmed Incentives','Confirmed Vandalism',
+    'Owner Bullying Member','Suspected Boosting','Suspected Incentives',
+    'Suspected Vandalism'
+  ]
+};
+
+let modalDec='';
+function openReasonModal(dec){
+  if(answered)return;
+  modalDec=dec;
+  const titles={moderation_remove:'Moderation Remove — Select Reason',member_fraud:'Member Fraud Remove — Select Reason',property_fraud:'Property Fraud Remove — Select Reason'};
+  document.getElementById('modal-title').textContent=titles[dec];
+  // Populate the dropdown with the correct reason set
+  const sel=document.getElementById('modal-reason-select');
+  sel.innerHTML='<option value="">— Select a reason (required) —</option>';
+  (REASON_SETS[dec]||[]).forEach(r=>{
+    const opt=document.createElement('option');
+    opt.value=r; opt.textContent=r;
+    sel.appendChild(opt);
+  });
+  sel.value='';
+  document.getElementById('btn-modal-save').disabled=true;
+  const comment=document.getElementById('mod-comment').value.trim();
+  document.getElementById('modal-pre-comment').textContent=comment||'No moderator comment entered.';
+  document.getElementById('reason-modal').classList.remove('hidden');
+}
+
+function onReasonChange(sel){document.getElementById('btn-modal-save').disabled=!sel.value;}
+function closeModal(){document.getElementById('reason-modal').classList.add('hidden');modalDec='';}
+
+function saveReason(){
+  const reason=document.getElementById('modal-reason-select').value;
+  if(!reason)return;
+  closeModal();processDecision(modalDec,reason);
+}
+
+function processDecision(dec,reason){
+  if(answered)return;
+  answered=true;clearInterval(timerInterval);setActionsEnabled(false);
+  const q=activeQBank[currentQIdx];
+  const isCorrect=dec===q.correct;
+  const timeTaken=Date.now()-startTime;
+  if(isCorrect)score+=10;else score==10;
+  updateScore();
+  logT(dec,reason,isCorrect,timeTaken);
+  sessionLog.push({q:currentQIdx+1,decision:dec,reason,correct:isCorrect,correctAnswer:q.correct,timeTaken});
+  const decLabel={publish:'Publish',moderation_remove:'Moderation Remove',member_fraud:'Member Fraud Remove',property_fraud:'Property Fraud Remove'}[dec];
+  const badge=reason?decLabel+' → '+reason:decLabel;
+  if(isCorrect){showFeedback(true,'Correct Decision',badge,q.expl,q.correct,reason);burstStars();}
+  else{showFeedback(false,'Incorrect Decision',badge,q.wrongExpl,q.correct,reason);shakeScreen();}
+}
+
+function logT(dec,reason,correct,timeMs){
+  telemetry.push({questionId:activeQBank[currentQIdx]?.id,decision:dec,reason,correct,timeMs,timestamp:new Date().toISOString()});
+}
+
+/* ── Feedback (Req #6 — detailed wrong explanation in a highlighted block) ── */
+function showFeedback(correct,title,badge,body,correctAnswer,reason){
+  const overlay=document.getElementById('feedback-overlay');
+  const card=document.getElementById('feedback-card');
+  overlay.classList.remove('hidden');
+  card.className='feedback-card '+(correct?'correct-fb':'incorrect-fb');
+  document.getElementById('fb-icon').textContent=correct?'✓':'✕';
+  document.getElementById('fb-icon').style.color=correct?'var(--green-d)':'var(--red)';
+  document.getElementById('fb-title').textContent=title;
+  document.getElementById('fb-title').className='fb-title '+(correct?'ok':'bad');
+  document.getElementById('fb-badge').textContent=badge;
+  document.getElementById('fb-body').textContent=body;
+  const wrongDetail=document.getElementById('fb-wrong-detail');
+  if(!correct){
+    // Build a 3-4 line explanation of why it is wrong (Req #6)
+    const cl={publish:'Publish',moderation_remove:'Moderation Remove',member_fraud:'Member Fraud Remove',property_fraud:'Property Fraud Remove'}[correctAnswer];
+    const q=activeQBank[currentQIdx];
+    wrongDetail.classList.remove('hidden');
+    wrongDetail.innerHTML=`<strong>Why your answer was incorrect:</strong><br>${body}<br><br><strong>Correct action:</strong> ${cl}`;
+  } else {
+    wrongDetail.classList.add('hidden');
+  }
+  const cl={publish:'Publish',moderation_remove:'Moderation Remove',member_fraud:'Member Fraud Remove',property_fraud:'Property Fraud Remove'}[correctAnswer];
+  document.getElementById('fb-correct').textContent=correct?'':('Expected: '+cl);
+  document.querySelector('.fb-next-btn').textContent=currentQIdx>=activeQBank.length-1?'See Results →':'Next Review →';
+  requestAnimationFrame(()=>card.classList.add('show'));
+}
+
+function hideFeedback(){
+  const card=document.getElementById('feedback-card');
+  card.classList.remove('show');
+  setTimeout(()=>document.getElementById('feedback-overlay').classList.add('hidden'),200);
+}
+
+function advanceQuestion(){
+  hideFeedback();
+  currentQIdx++;
+  if(currentQIdx>=activeQBank.length){endAssessment();return;}
+  setTimeout(()=>{loadQuestion();startTimer();},230);
+}
+
+/* ── Navigation with must-select check (Req #5) ── */
+function nextQManual(){
+  if(!answered){showMustSelectToast();return;}
+  advanceQuestion();
+}
+function prevQ(){
+  if(!answered){showMustSelectToast();return;}
+  if(currentQIdx>0){hideFeedback();currentQIdx--;loadQuestion();startTimer();}
+}
+
+/* ── Nav dropdown toggles (Req #3 & #4) ── */
+function toggleNavDropdown(id,btn){
+  const dd=document.getElementById(id);
+  const isOpen=dd.classList.contains('show');
+  // Close all
+  document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('show'));
+  document.querySelectorAll('.ws-nav-tab').forEach(t=>t.classList.remove('active'));
+  if(!isOpen){dd.classList.add('show');btn.classList.add('active');}
+}
+
+function toggleNavCheck(cb){
+  const label=cb.closest('label');
+  label.classList.toggle('checked',cb.checked);
+  label.style.background=cb.checked?'#f0fdf4':'';
+  label.style.color=cb.checked?'#15803d':'';
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.ws-nav-tabs'))
+    document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('show'));
+});
+
+/* ── Queue panel toggle (Req #9) ── */
+function toggleQueueTabPanel(btn,panelId){
+  // Close all panels and deactivate all tabs first
+  const alreadyOpen = document.getElementById(panelId).classList.contains('open');
+  document.querySelectorAll('.queue-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.queue-filter-panel').forEach(p=>p.classList.remove('open'));
+  if(!alreadyOpen){
+    // Open the clicked panel
+    btn.classList.add('active');
+    document.getElementById(panelId).classList.add('open');
+  }
+}
+
+/* ── Helpful links with Google email search (Req #8) ── */
+function openHelpfulLink(sel){
+  const v=sel.value;
+  if(!v){return;}
+  let url='';
+  const email=currentReviewerEmail||'';
+  if(v==='__google_display__'){
+    const display=REVIEWERS.find(r=>r.email===email)?.display||email;
+    url='https://www.google.com/search?q='+encodeURIComponent('"'+display+'"');
+  } else if(v==='__google_subject__'){
+    url='https://www.google.com/search?q='+encodeURIComponent(email.split('@')[0]);
+  } else if(v==='__google_email__'){
+    url='https://www.google.com/search?q='+encodeURIComponent('"'+email+'"');
+  } else {
+    url=v;
+  }
+  if(url) window.open(url,'_blank');
+  sel.value='';
+}
+
+/* ── Animations ── */
+function burstStars(){
+  const c=document.getElementById('star-burst');
+  c.classList.remove('hidden');c.innerHTML='';
+  const cx=window.innerWidth/2,cy=window.innerHeight/2;
+  ['★','✦','★','✦','★','✦'].forEach((s,i)=>{
+    const el=document.createElement('span');
+    el.textContent=s;
+    const a=(i/6)*2*Math.PI,d=70+Math.random()*80;
+    el.style.setProperty('--tx',Math.cos(a)*d+'px');
+    el.style.setProperty('--ty',Math.sin(a)*d+'px');
+    el.style.left=cx+'px';el.style.top=cy+'px';
+    el.style.color=['#34E0A1','#00AF87','#F5A623'][i%3];
+    el.style.animationDelay=(i*.1)+'s';
+    c.appendChild(el);
+  });
+  setTimeout(()=>c.classList.add('hidden'),1100);
+}
+function shakeScreen(){
+  const ws=document.getElementById('phase-workspace');
+  ws.classList.add('screen-shake');
+  ws.addEventListener('animationend',()=>ws.classList.remove('screen-shake'),{once:true});
+}
+
+/* ── Utils ── */
+function updateScore(){document.getElementById('ws-score').textContent='Score: '+score;}
+function toggleSec(id){
+  const body=document.getElementById('body-'+id);
+  const btn=document.getElementById('toggle-'+id);
+  const closed=body.classList.toggle('closed');
+  btn.textContent=closed?'+':'−';
+}
+function toggleDark(){document.body.classList.toggle('dark');}
+function chipAlert(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:7px 16px;border-radius:18px;font-size:10px;font-weight:600;z-index:9999;box-shadow:var(--sh-lg);';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2000);
+}
+function translateReview(lang){
+  if(lang==='English'){const q=activeQBank[currentQIdx];if(q)document.getElementById('review-body-text').textContent=q.body;return;}
+  const msgs={Spanish:'[Traducción no disponible en modo demo]',French:'[Traduction non disponible en mode démo]',German:'[Übersetzung im Demo-Modus nicht verfügbar]',Italian:'[Traduzione non disponibile in modalità demo]',Portuguese:'[Tradução não disponível no modo de demonstração]'};
+  document.getElementById('review-body-text').textContent=msgs[lang]||'[Translation not available in demo mode]';
+}
+
+/* ── End / Results ── */
+function endAssessment(){
+  clearInterval(timerInterval);
+  document.getElementById('phase-workspace').style.display='none';
+  document.getElementById('phase-results').style.display='flex';
+  const pct=Math.round((score/(activeQBank.length*10))*100);
+  const passed=pct>=80;
+  document.getElementById('final-score-num').textContent=score+' pts';
+  const pb=document.getElementById('pass-badge');
+  pb.textContent=passed?'PASSED — '+pct+'%':'NOT PASSED — '+pct+'%';
+  pb.className='pass-badge '+(passed?'pass':'fail');
+  document.getElementById('final-summary').textContent=sessionLog.filter(l=>l.correct).length+' of '+activeQBank.length+' correct · '+sessionLog.filter(l=>!l.correct).length+' incorrect';
+  document.getElementById('analytics-rows').innerHTML=sessionLog.map(l=>{
+    const dl={publish:'Publish',moderation_remove:'Mod Remove',member_fraud:'Mbr Fraud',property_fraud:'Prop Fraud',timeout:'Timeout'}[l.decision]||l.decision;
+    const cl={publish:'Publish',moderation_remove:'Mod Remove',member_fraud:'Mbr Fraud',property_fraud:'Prop Fraud'}[l.correctAnswer];
+    return`<div class="analytics-row"><span class="q-num">Q${l.q}</span><span class="decision">${dl}${l.reason?' ('+l.reason+')':''}</span>${l.correct?'<span class="correct-mark">✓</span>':'<span class="wrong-mark">✕ '+cl+'</span>'}</div>`;
+  }).join('');
+  document.getElementById('telemetry-json').textContent=JSON.stringify({session:{employeeId:maskId(empId),name:mask(empName,3),day:selectedDay,policy:DAYS[selectedDay].name,timestamp:new Date().toISOString(),score,pct,passed},decisions:telemetry},null,2);
+  // Certificate
+  const dayLine='Day '+selectedDay+' — '+DAYS[selectedDay].name;
+  document.getElementById('cert-name-preview').textContent=empName;
+  document.getElementById('cert-empid-preview').textContent='Employee ID: '+empId;
+  document.getElementById('cert-score-val').textContent=score+' pts ('+pct+'%)';
+  document.getElementById('cert-date-val').textContent=new Date().toLocaleDateString('en-GB');
+  document.getElementById('cert-day-line').textContent=dayLine;
+  const dlBtn=document.getElementById('btn-dl-cert');
+  if(!passed){dlBtn.disabled=true;dlBtn.textContent='Certificate requires 80% score';}
+  else{dlBtn.disabled=false;dlBtn.textContent='Download Certificate (PDF)';}
+}
+
+/* ── PDF Certificate (professional, no emojis, Day + Policy on cert) ── */
+function downloadCert(){
+  const jsPDFCtor=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;
+  if(!jsPDFCtor){chipAlert('PDF library not available.');return;}
+  const doc=new jsPDFCtor('landscape','mm','a4');
+  const W=297,H=210;
+  const pct=Math.round((score/(activeQBank.length*10))*100);
+  doc.setFillColor(255,255,255);doc.rect(0,0,W,H,'F');
+  doc.setDrawColor(80,80,80);doc.setLineWidth(1.2);doc.rect(10,10,W-20,H-20);
+  doc.setDrawColor(180,180,180);doc.setLineWidth(0.4);doc.rect(15,15,W-30,H-30);
+  doc.setFontSize(7.5);doc.setFont('times','normal');doc.setTextColor(130,130,130);
+  doc.text('SUTHERLAND TRUST & SAFETY  ·  TRIPADVISOR',W/2,28,{align:'center'});
+  doc.setFontSize(28);doc.setFont('times','italic');doc.setTextColor(20,20,20);
+  doc.text('Certificate of Completion',W/2,46,{align:'center'});
+  doc.setFontSize(8.5);doc.setFont('times','normal');doc.setTextColor(140,140,140);
+  doc.text('CONTENT MODERATION TRAINING',W/2,55,{align:'center'});
+  // Day line
+  doc.setFontSize(8);doc.setFont('times','bold');doc.setTextColor(80,80,80);
+  doc.text('Day '+selectedDay+' — '+DAYS[selectedDay].name,W/2,63,{align:'center'});
+  doc.setDrawColor(160,160,160);doc.setLineWidth(0.4);doc.line(70,68,W-70,68);
+  doc.setFillColor(160,160,160);doc.circle(W/2,68,1.2,'F');
+  doc.setFontSize(10);doc.setFont('times','italic');doc.setTextColor(110,110,110);
+  doc.text('This is to certify that',W/2,79,{align:'center'});
+  doc.setFontSize(24);doc.setFont('times','bold');doc.setTextColor(20,20,20);
+  doc.text(empName,W/2,93,{align:'center'});
+  const nw=doc.getTextWidth(empName);
+  doc.setDrawColor(140,140,140);doc.setLineWidth(0.5);doc.line((W-nw)/2,97,(W+nw)/2,97);
+  doc.setFontSize(8.5);doc.setFont('times','normal');doc.setTextColor(120,120,120);
+  doc.text('Employee ID: '+empId,W/2,105,{align:'center'});
+  doc.setFontSize(9.5);doc.setFont('times','italic');doc.setTextColor(60,60,60);
+  doc.text('has successfully completed all modules of the Tripadvisor Content Moderation Training',W/2,117,{align:'center'});
+  doc.text('and demonstrated proficiency in evaluating and moderating user-generated content.',W/2,123,{align:'center'});
+  const sY=137;
+  const stats=[['FINAL SCORE',score+' pts ('+pct+'%)'],['QUESTIONS',String(activeQBank.length)],['DATE ISSUED',new Date().toLocaleDateString('en-GB')]];
+  const bW=68,gap=10,totalW=bW*3+gap*2,sX=(W-totalW)/2;
+  stats.forEach(([lbl,val],i)=>{
+    const x=sX+i*(bW+gap);
+    if(i>0){doc.setDrawColor(200,200,200);doc.setLineWidth(0.3);doc.line(x,sY-7,x,sY+9);}
+    doc.setFontSize(6.5);doc.setFont('times','normal');doc.setTextColor(130,130,130);
+    doc.text(lbl,x+bW/2,sY-1,{align:'center'});
+    doc.setFontSize(12);doc.setFont('times','bold');doc.setTextColor(20,20,20);
+    doc.text(val,x+bW/2,sY+8,{align:'center'});
+  });
+  doc.setDrawColor(120,120,120);doc.setLineWidth(0.5);doc.line(W/2-48,162,W/2+48,162);
+  doc.setFontSize(10.5);doc.setFont('times','italic');doc.setTextColor(30,30,30);
+  doc.text('Sutherland Trust & Safety',W/2,168,{align:'center'});
+  doc.setFontSize(6.5);doc.setFont('times','normal');doc.setTextColor(130,130,130);
+  doc.text('TRAINING EVALUATOR',W/2,173,{align:'center'});
+  doc.setFontSize(6);
+  doc.text('Verified  ·  Authentic Certificate of Completion  ·  Tripadvisor Content Moderation',W/2,181,{align:'center'});
+  const safeName=empName.replace(/[^a-zA-Z0-9]/g,'_');
+  doc.save(safeName+'_'+empId+'_Day'+selectedDay+'_Tripadvisor_Certificate.pdf');
+}
+
+function retake(){
+  document.getElementById('phase-results').style.display='none';
+  document.getElementById('phase-workspace').style.display='flex';
+  buildDayBank();loadQuestion();startTimer();
+}
+
+/* ── Local storage persistence ── */
+function saveSession(){
+  if(!empId)return;
+  localStorage.setItem('ta_v3_session',JSON.stringify({empId,empName,selectedDay,currentQueue,currentQIdx,score,sessionLog,telemetry,qIds:activeQBank.map(q=>q.id)}));
+}
+window.addEventListener('beforeunload',saveSession);
+window.addEventListener('load',()=>{
+  const s=localStorage.getItem('ta_v3_session');
+  if(!s)return;
+  try{
+    const d=JSON.parse(s);
+    if(d.empId&&d.currentQIdx>0&&confirm('Resume previous session for '+d.empName+' (Day '+d.selectedDay+')?')){
+      empId=d.empId;empName=d.empName;selectedDay=d.selectedDay||1;
+      currentQueue=d.currentQueue||'incoming';
+      score=d.score||0;sessionLog=d.sessionLog||[];telemetry=d.telemetry||[];
+      const idSet=new Set(d.qIds||[]);
+      activeQBank=FULL_BANK.filter(q=>idSet.has(q.id));
+      if(!activeQBank.length){localStorage.removeItem('ta_v3_session');return;}
+      currentQIdx=Math.min(d.currentQIdx,activeQBank.length-1);
+      document.getElementById('phase-login').style.display='none';
+      document.getElementById('phase-workspace').style.display='flex';
+      document.getElementById('sub-reviewer-id').textContent='Reviewer: '+maskId(empId);
+      document.getElementById('classifier-val').textContent=empName;
+      document.getElementById('day-mode-badge').textContent='Day '+selectedDay+' — '+DAYS[selectedDay].name;
+      updateScore();updateSampleIdsDropdown();loadQuestion();startTimer();
+      localStorage.removeItem('ta_v3_session');
+    }
+  }catch(e){localStorage.removeItem('ta_v3_session');}
+});
+</script>
+</body>
+</html>
