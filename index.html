@@ -78,7 +78,20 @@ select{cursor:pointer;}
 .admin-nav .brand span{color:#90caf9;}
 .admin-nav-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
 .admin-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 12px;color:#fff;font-size:10px;font-weight:700;}
-.admin-logout-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);padding:6px 12px;color:#fff;font-size:11px;font-weight:700;}
+.admin-logout-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);padding:6px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;}
+.admin-logout-btn:hover{background:rgba(255,255,255,.2);}
+/* Cloud status indicator */
+.admin-cloud-status{margin-left:16px;display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:20px;font-size:10.5px;font-weight:600;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);}
+.admin-cloud-status.status-ok{background:rgba(52,224,161,.18);border-color:rgba(52,224,161,.4);}
+.admin-cloud-status.status-warn{background:rgba(255,193,77,.18);border-color:rgba(255,193,77,.4);}
+.admin-cloud-status.status-err{background:rgba(208,2,27,.18);border-color:rgba(208,2,27,.4);}
+.admin-cloud-status.status-loading{background:rgba(120,180,255,.18);border-color:rgba(120,180,255,.4);}
+.cloud-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.cloud-dot.ok{background:#34E0A1;box-shadow:0 0 6px rgba(52,224,161,.6);}
+.cloud-dot.warn{background:#FFC14D;}
+.cloud-dot.err{background:#FF6B7A;}
+.cloud-dot.loading{background:#7AB8FF;animation:cloudpulse 1s ease-in-out infinite alternate;}
+@keyframes cloudpulse{from{opacity:.5;}to{opacity:1;}}
 .admin-body{padding:24px;flex:1;}
 .admin-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
 .admin-stat-card{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:var(--sh);border-top:4px solid transparent;}
@@ -489,7 +502,9 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
   <nav class="admin-nav">
     <span class="brand">URD <span>Simulator</span></span>
     <span class="admin-badge">Admin Dashboard</span>
+    <div id="cloud-status" class="admin-cloud-status status-warn"><span class="cloud-dot warn"></span>Initializing…</div>
     <div class="admin-nav-right">
+      <button class="admin-logout-btn" onclick="refreshAdminData()">↻ Refresh</button>
       <span class="admin-badge" id="admin-id-display">—</span>
       <button class="admin-logout-btn" onclick="adminLogout()">← Exit</button>
     </div>
@@ -783,6 +798,21 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+/* ════════════════════════════════════════════════
+   GOOGLE SHEETS INTEGRATION
+   Paste your Apps Script Web App URL below to enable
+   cross-device score sharing. Leave empty to use only
+   browser localStorage (per-device).
+   
+   Setup instructions are in the file
+   "Google_Sheets_Setup_Guide.md" provided alongside.
+════════════════════════════════════════════════ */
+const CONFIG = {
+  // Paste your Google Apps Script Web App URL here (the one ending in /exec)
+  // Example: 'https://script.google.com/macros/s/AKfycb.../exec'
+  GOOGLE_SHEET_URL: 'https://script.google.com/macros/s/AKfycbxZldYPpS8DGeJHOjLv7TmDc3K1hRS2dmM_j5OsJW-1mVjODUmnRGMRSIBQms0-CBWd/exec',
+};
+
 /* ════════════════════════════════════════════════
    QUESTION BANK — from Excel sheet + AI-generated fill
    correct values: 'publish' | 'moderation_remove' | 'member_fraud' | 'property_fraud'
@@ -1551,6 +1581,114 @@ const FULL_BANK = [
 ];
 
 /* ════════════════════════════════════════════════
+   OWNER RESPONSES (for Reported queue)
+   Every reported review has an owner response shown
+   between the Review Content and Moderator Comment.
+   3-4 lines from the property owner's perspective,
+   tailored to each specific review.
+════════════════════════════════════════════════ */
+const OWNER_RESPONSES = {
+  // ── Day 1 ──
+  1001:"Patrick is not a name in our recent guest records and no incident was reported during this period. We pride ourselves on resolving any concerns during the stay itself. This review provides no specific information we can act upon — we respectfully request platform verification.",
+  1002:"We are concerned by the strong wording but cannot identify any incident matching this stay. The reviewer themselves notes they are typing filler words to meet character minimums, which suggests the negative claim isn't tied to a real experience. We request review of this submission.",
+  1003:"Thank you for recognising Ismail — he is one of our most dedicated team members and we will share this. However, future guests would benefit from more substantive feedback than emoji-only reactions. We hope you'll share more about your stay in any return visit.",
+  1004:"Thank you for choosing Marriott Tiruchi and for your warm words about our team and breakfast spread. Glad to hear the pleasant comparison with our previous Sangam branding. We look forward to welcoming you back on your next Tiruchi visit.",
+  1005:"We take all guest safety and cleanliness reports extremely seriously and would investigate immediately. However, we have no record of any guest reporting these issues during this period. The translated portions raise additional questions — we welcome platform verification of this submission.",
+  1006:"Maraming salamat for your kind feedback about our staff, rooms, and infinity pool. We have shared your warm comments with our entire team. We'd love future travellers to be able to read your review in our platform's main language so it benefits more guests.",
+  1007:"We genuinely appreciate guest feedback, but the exact wording of this review has appeared on other property listings. We cannot identify a guest matching these stay details in our records. We respectfully request the platform integrity team verify this submission.",
+  1008:"Thank you for the warm words, but the precise text of this review has been previously published on another listing. Additionally, Magda is no longer on our front desk team. We request platform investigation as this does not appear to reflect a recent stay at Pupetto.",
+  1009:"Thank you so much for your stay at Sigiriya Village. We notice the closing text includes the phrase 'Ask ChatGPT', which suggests this content was AI-assisted rather than genuinely written. We request the platform verify the authenticity of this submission.",
+  1010:"We appreciate all feedback at The Ride NYC. However, this content explicitly begins with 'ChatGPT said:' — a clear indicator that an AI generated the text rather than a real guest. We respectfully request removal as AI-generated content per platform policy.",
+  1011:"Our automated response template inadvertently included our direct email, phone number and website URL. We sincerely apologise — this is not how we engage with public reviews. Our response process is being corrected and we appreciate the platform's commercial content guidelines.",
+  1012:"Thank you for the kind feedback about Waleed Alsamman's wonderful guiding. We acknowledge our marketing signature with our website URL and phone was incorrectly appended. Our template has been updated to remove commercial content from public responses.",
+  1013:"This is not a guest review. The poster is a third-party satellite installation technician disputing a service payment unrelated to our hospitality operations. This commercial vendor disagreement should not appear on our property listing.",
+  1014:"This individual has never been a customer at our restaurant. They were involved in a private financial investment discussion with the previous owner, entirely separate from dining services. This review confuses an investment dispute with restaurant operations.",
+  1015:"We are absolutely delighted by your wonderful detailed review — thank you! Sofia will be thrilled to hear your kind words about her arranging the boat tour. We have already flagged the hot water delay for our maintenance team. We can't wait to welcome you back.",
+  1016:"The opening line 'Certainly! Here's a detailed review based on what you might experience' is a clear AI assistant response pattern. The content describes hypothetical experiences ('you might experience') rather than an actual stay. We request platform review for authenticity.",
+
+  // ── Day 2 ──
+  2001:"This 'review' was posted by the registered owner of a competing restaurant in Looe. Jamie and Mansel are not members of our team. We respectfully request the platform remove competitor postings — whether positive or negative — from our listing.",
+  2002:"The reviewer is the registered owner of a competing golf course in the same area. Regardless of the rating, postings from direct competitors compromise the integrity of guest feedback. We ask Tripadvisor to investigate and apply DC Policy.",
+  2003:"We sincerely apologise for the phone difficulty — we are upgrading our reservation system this quarter. However, the reviewer never actually stayed at our property and gave a 1-star rating based purely on pre-arrival contact issues. A booking experience review is different from a stay review.",
+  2004:"We have no record of this person as a guest. The accusations appear to reference media coverage rather than firsthand experience. We respectfully request the platform verify that the reviewer actually visited our property before publishing such serious claims.",
+  2005:"We're very sorry to hear about the son-in-law's parking experience but this is not a first-hand review by the poster. We maintain CCTV records and would investigate any reported incident from that period directly with the affected party. We request this be reviewed as a third-party account.",
+  2006:"Hostelle is deeply committed to guest security and we have no records matching these incidents. Importantly, the reviewer is recounting her sister's experience rather than her own. We request the platform enforce its first-hand review requirement.",
+  2007:"Our cancellation policy is clearly displayed at booking, accepted during reservation, and confirmed in writing. We understand the disappointment about the allergy mismatch, but the reviewer agreed to the policy when booking. This is a disagreement with our published policy, not a service issue.",
+  2008:"We sympathise deeply with family illness situations, but our cancellation policy applies fairly to all guests. The reviewer never experienced our property. This review reflects disagreement with a clearly stated business policy rather than the actual stay.",
+  2009:"We acknowledge this response has been attached to the wrong review. The named guest 'Alistair' and the amenity feedback referenced do not match this review at all. Our online reputation team is correcting this immediately and we apologise for the confusion.",
+  2010:"We acknowledge that our response language was unprofessional and inappropriate. We are reviewing our owner response protocols and providing additional training. We apologise to the group for the tone of our previous reply, regardless of the underlying dispute.",
+  2011:"We have no booking record matching this individual and no Expedia case escalation involving our property. The personal email solicitation for class action participants suggests this is a legal recruitment post rather than a genuine review of our service.",
+  2012:"This is a travel planning request, not a review of any experience at our property. The reviewer is seeking general recommendations for Amsterdam. We respectfully ask the platform to redirect such planning queries to community forums where they can be properly answered.",
+  2013:"The reviewer explicitly states their last visit was 2023 — over 18 months ago. We have made significant updates since then. Additionally, the comment about current guests is irrelevant to operations. We request removal of outdated reviews per platform policy.",
+  2014:"We deeply regret any safety concerns during 2022 dives and have since revised our certification and oversight procedures. However, the platform requires reviews to reflect current operations. A 2022 experience cannot represent today's significantly enhanced safety standards.",
+  2015:"This 'review' contains no description of any actual experience at Adlerwood RV — only personal attacks on the owners. We respectfully request removal as it provides no information useful to future guests considering our property.",
+  2016:"We welcome service feedback at any time, but characterising specific staff members based on physical appearance ('fat woman with glasses') violates platform community standards. Constructive service complaints are always actionable; personal attacks based on appearance are not.",
+  2017:"We are addressing the housekeeping concerns raised urgently — these are valid complaints. However, the comment about other guests' demographics is irrelevant to the service review and we request the platform review this portion under community guidelines.",
+  2018:"The reviewer's primary content is a political comment about asylum seekers receiving services rather than their own pool experience. We ask the platform to focus the review on actual experience and remove the irrelevant political commentary that has previously been flagged.",
+  2019:"This 'review' contains no description of any experience at our property. It is feedback directed at Tripadvisor's policy on displaying historic reviews. We ask the platform to redirect platform-level feedback to appropriate channels.",
+  2020:"We're so glad Curtis made a positive impression! The reviewer explicitly notes they are padding to meet the platform's minimum character requirement. We'd love future guests to feel comfortable leaving shorter genuine reviews — substance over length.",
+  2021:"Thank you for such a wonderful detailed review highlighting Marcus's knowledge and our small-group format! We're delighted you enjoyed the 14-landmark Victorian architecture walk. Sharing this feedback with our team and look forward to welcoming you on future tours.",
+
+  // ── Day 3 ──
+  3001:"Thank you for your kind feedback. However, the review combines stays at two separate properties — Luxme Oasis and Riviera Olympia Hotel. For accuracy and to help future guests choose the right resort, we respectfully request the platform process these as separate listings.",
+  3002:"We deeply regret the booking error described at Villa del Arco. However, the reviewer's extensive positive review of Grand Fiesta Americana within our listing skews the focus to a competitor's experience. We ask the platform to keep reviews property-specific.",
+  3003:"Thank you for the kind feedback about our Memphis Tours team. We note the review credits both TransTravel and Memphis Tours services. We request this be re-posted to the correct Memphis Tours listing so both businesses receive accurate visibility.",
+  3004:"We sincerely regret the seating discomfort experienced during your flight and are reviewing cabin configuration on this route. However, the language used to describe other passengers ('asses in my face') is not appropriate for our public family-facing review platform.",
+  3005:"We're sorry the service didn't meet your expectations and we will review our team communication. However, the language used ('bitched about me') and the inappropriate sexual reference fall outside platform content standards and need to be reviewed.",
+  3006:"We are deeply regretful if any guest felt unwelcome at Melia. However, statements characterising the Spanish people in derogatory terms ('let the Spanish wallow') are discriminatory and cannot stand on the platform. We have escalated this to our diversity team and the platform.",
+  3007:"Our team includes wonderful people of all hair colours and appearances. We strongly object to characterising specific staff members negatively based on appearance ('three females with blonde hair'). Service feedback is always welcome — discriminatory generalisations are not.",
+  3008:"We are extremely concerned by the threatening language directed at our employee Rosa. The specific reference to her work schedule and intent to confront her after shift constitutes a serious safety threat. We have alerted local police and the platform's safety team immediately.",
+  3009:"We acknowledge that our property has a casual atmosphere, but the closing phrase used in this review is inappropriate for a public family-facing platform. We request the content be reviewed per platform community standards.",
+  3010:"While cannabis laws vary, bringing controlled substances into any festival venue violates entry conditions clearly disclosed at ticket purchase. Confiscation procedures are standard for many events. We request this content be reviewed per illegal activity guidelines.",
+  3011:"We are alarmed that our manager Daniel's home address, vehicle and daily routine have been publicly shared. This is a serious doxxing incident threatening his safety. We have immediately alerted local police and request urgent platform removal.",
+  3012:"Thank you for the wonderful detailed review of Tomas and our visitor centre experience! We're delighted the 18km trail, safety briefings and locally-sourced lunch met expectations. We look forward to welcoming you back for future guided adventures.",
+  3013:"We are immediately escalating this threat to local law enforcement. Specific timing and location details about confronting our manager constitute a credible threat to staff safety. We request the platform remove this content as an emergency safety matter.",
+  3014:"We acknowledge our beach environment can be busy at night and are reviewing security with the local council. However, the graphic description of explicit sexual activity in a public review is not appropriate for a family-facing platform regardless of intent to warn.",
+  3015:"We are deeply troubled that our team member Marco's social media handle, personal mobile and home address have been published with stated intent for further contact. We have alerted local police and request immediate platform removal as a privacy/safety emergency.",
+
+  // ── Day 4 ──
+  4001:"We thank our wonderful regulars for their loyalty. However, our system has identified this same review submitted from a second account belonging to the same individual. We respectfully request the duplicate be removed per platform policy.",
+  4002:"Faruk genuinely is a wonderful tour guide who deserves recognition! However, this specific text appears verbatim in an earlier review from a different traveller (review 1023363763). We request platform investigation to ensure each review represents an authentic personal stay.",
+  4003:"We are deeply concerned by the strong allegations about review manipulation and police involvement. These claims are unverified and we have CCTV and inspection records that contradict them. We welcome any platform integrity investigation to verify the truth.",
+  4004:"We absolutely reject the unverified allegation that 'all the reviews are probably fake' — we have hundreds of legitimate reviews verified through booking records. The combination of biased commentary about ownership ethnicity and the fraud accusation requires platform review.",
+  4005:"Our manager reached out to understand the guest's concerns, not to negotiate a review exchange. The reviewer's explicit conditional offer to remove the review in exchange for a full refund crosses ethical lines. We request platform investigation.",
+  4006:"We pride ourselves on warm hospitality but cannot allow reviews to be traded for free product. The reviewer's open offer to upgrade their rating for free pork scratchings is a textbook blackmail pattern that we request the platform investigate.",
+  4007:"We have never threatened legal action against any reviewer and this response was issued by an external party without our authorisation. We sincerely apologise and have removed the legal representative's access to our review responses immediately.",
+  4008:"We never offered a complimentary stay in exchange for review removal. This response was issued in error by a junior team member and we apologise for the confusion. We are providing additional training on platform engagement guidelines.",
+  4009:"We sincerely apologise for the HVAC noise in room 412 and have since replaced the unit entirely. The £20 was offered as a goodwill gesture acknowledging the inconvenience. We appreciate your patience while we worked through the issue overnight.",
+  4010:"Priya will be absolutely delighted to hear her quick service recovery was appreciated. We sincerely apologise for the initial booking error and are reviewing our reservation handover protocol to prevent similar issues going forward. Thank you for the balanced feedback.",
+  4011:"We are deeply concerned that the reviewer explicitly identifies themselves as 13 years old. Platform policies require minimum age for reviews to protect minors and ensure verified guest experiences. We have alerted compliance and the platform.",
+  4012:"We absolutely reject any suggestion of coordinated review activity from our WiFi. We work transparently with Tripadvisor's safety team and welcome any investigation that confirms our compliance with platform integrity standards. Our genuine guests deserve credibility.",
+  4013:"We are reporting this extortion attempt to local police and to Tripadvisor's safety team. Threatening coordinated daily review attacks across all platforms in exchange for a £350 refund constitutes criminal behaviour that we will not tolerate.",
+  4014:"We are aware of the Facebook 'Boycott This Hotel' group and have reported it to Tripadvisor's safety team. Coordinated review bombing campaigns of 2,000 members misrepresent our genuine guest experiences and we appreciate the platform's enforcement against such attacks.",
+  4015:"We are honoured by such loyal patronage and delighted by your detailed feedback on the new chef's tasting menu and Sommelier's wine pairings. The December booking is confirmed and we look forward to welcoming you back for another exceptional evening.",
+
+  // ── Day 5 ──
+  5001:"We absolutely reject this review. Investigation reveals the text has been copied from another reviewer's submission for the same property — a coordinated vandalism attempt to amplify negative coverage. We request the platform integrity team act immediately.",
+  5002:"This review's text has been identified as copied from review 1020572153 for an entirely different property. SY Hotel Belek has been incorrectly targeted with another property's complaints. We request urgent platform investigation and removal.",
+  5003:"We thank guests who recognise Mrs Carmen's wonderful service. However, we acknowledge there has been an unusual spike of similarly worded reviews mentioning specific staff names. We are working transparently with the platform integrity team on verification.",
+  5004:"Thalassa restaurant is genuinely one of our breakfast highlights. However, we acknowledge the unusual pattern of similarly structured 10/10 reviews and welcome the platform's verification process to ensure each review reflects an authentic stay.",
+  5005:"Thank you for the kind words about our complex. We acknowledge this reviewer has activity at our property under shared credentials with multiple accounts. We are cooperating with the platform integrity team to ensure proper resolution.",
+  5006:"Chef Brandon's ahi tuna is genuinely a guest favourite at Wild Sea! However, we acknowledge this specific account has prior fraud removals on our property. We are working with the platform integrity team for proper investigation.",
+  5007:"We sincerely apologise — internal investigation has confirmed this kind review was submitted at our request as part of a marketing campaign. We are reviewing our practices immediately and have ended the campaign. We deeply regret the breach of integrity guidelines.",
+  5008:"We acknowledge our marketing efforts in HCMC inadvertently encouraged staff and customers to post reviews. This is a confirmed violation of platform guidelines and we are immediately ending the practice. We sincerely apologise for the integrity breach.",
+  5009:"The reviewer explicitly states they received a free excursion in exchange for posting this review ('we took a review offer so we got it free'). We apologise — this marketing campaign was misguided and has been immediately discontinued. We are reviewing all marketing practices.",
+  5010:"We're sorry the Sunday lunch experience disappointed. However, we note the reviewer is the verified owner of a competing café in our area. Whether feedback is positive or negative, postings from direct competitors require platform action per DC Policy.",
+  5011:"This 'review' is in fact promotional content for Volunteers Tanzania — a separate organisation founded by Ms Ansell that has no relation to our listed property. We respectfully request the platform redirect such promotional content to appropriate channels.",
+  5012:"This 'review' is in fact a promotional listing for a safari booking service with a direct contact number. It is not feedback about our actual safari experience. We request the platform remove this commercial promotion masquerading as a review.",
+  5013:"We acknowledge the recent media coverage about our company. However, the sudden influx of 1-star reviews from non-guests reacting to news rather than actual visits is a coordinated review bombing campaign that misrepresents real customer experiences.",
+  5014:"The reviewer is resubmitting content that was originally written about her daughter's experience (per earlier reviews 1017641042 and 1017354948). Presenting another person's experience as one's own is deceptive resubmission that we request the platform investigate.",
+  5015:"We acknowledge ongoing business challenges but the personal attacks on our owner Chris Barnett, calling him 'dangerous' and 'lying loose cannon', do not reflect any actual stay experience. We have reported this disgruntled customer pattern to the platform safety team.",
+  5016:"We're delighted you found genuine value at our hotel! Your practical tip about bringing eye patches is appreciated — we are addressing room darkening in our next renovation. We honestly appreciate the candid feedback about our photo accuracy too. Look forward to your return.",
+  5017:"We're so glad your visit to Blue Note Tokyo was a bucket-list moment! Your insider tip about having a drink at the outer bar before the show is wonderful — we'll share it with our front-of-house team. Thank you for the warm review and we hope you'll return soon.",
+  5018:"We sincerely appreciate the balanced and detailed feedback about our Dubai property. The breakfast buffet and half-board steak restaurant feedback is being reviewed by our F&B team. We are also addressing staff acknowledgement training based on your observations.",
+  5019:"We acknowledge our venue has permanently closed. This kind positive review reflects a previous era of operation and may mislead users searching for current options. We respectfully request the platform update our listing status to closed.",
+  5020:"We confirm Dona Esther is permanently closed. The reviewer's redirection to Toco truck, Jardins and Bliss Blendz is accurate. We thank past patrons for their support over the years and request the platform update our listing status accordingly.",
+  5021:"We thank our team at Petra restaurant — Chef Nadi, Yasin and especially Enescan — for earning such warm feedback. However, the 1-star rating clearly doesn't match the enthusiastic content. Likely a submission error and we request the platform allow correction.",
+  5022:"We're sorry the Deliveroo delivery experience was disappointing — we have shared this with our restaurant team and the delivery partner. However, the 1-star Atmosphere and Service ratings reflect a delivery experience, not an in-restaurant visit. We request these ratings be reviewed.",
+};
+
+/* ════════════════════════════════════════════════
    CORRECT REASON MAPPING
    For each question id, the EXACT reason text that must
    be selected from the dropdown to count as correct.
@@ -1704,13 +1842,68 @@ function getScoreRecords(){
 }
 
 function saveScoreRecord(rec){
+  // Always save locally first
   const all=getScoreRecords();
   all.push(rec);
   localStorage.setItem('urd_scores',JSON.stringify(all));
+  // Also send to Google Sheets if configured
+  if(CONFIG.GOOGLE_SHEET_URL){
+    sendToGoogleSheet(rec);
+  }
 }
 
-function renderAdminDashboard(){
-  const records=getScoreRecords();
+function sendToGoogleSheet(rec){
+  // Fire-and-forget POST. We use text/plain to avoid CORS preflight.
+  try{
+    fetch(CONFIG.GOOGLE_SHEET_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(rec)
+    }).catch(e=>console.warn('Sheet save failed:',e));
+  }catch(e){console.warn('Sheet save error:',e);}
+}
+
+async function fetchFromGoogleSheet(){
+  if(!CONFIG.GOOGLE_SHEET_URL)return null;
+  try{
+    const res=await fetch(CONFIG.GOOGLE_SHEET_URL,{method:'GET'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    return Array.isArray(data)?data:[];
+  }catch(e){
+    console.warn('Sheet fetch failed:',e);
+    return null;
+  }
+}
+
+async function getAllRecords(){
+  const local=getScoreRecords();
+  if(!CONFIG.GOOGLE_SHEET_URL)return local;
+  const sheet=await fetchFromGoogleSheet();
+  if(sheet===null){
+    // Fetch failed — fall back to local
+    return local;
+  }
+  // Merge sheet (authoritative) with local records that aren't yet synced
+  const sheetKeys=new Set(sheet.map(r=>(r.empId||'')+'|'+(r.datetime||'')));
+  const unsynced=local.filter(r=>!sheetKeys.has((r.empId||'')+'|'+(r.datetime||'')));
+  return [...sheet,...unsynced];
+}
+
+// Cache of records for the admin panel — populated on dashboard open
+let _adminRecordsCache=[];
+
+async function renderAdminDashboard(){
+  // Show loading state
+  document.getElementById('stat-total').textContent='…';
+  document.getElementById('stat-passed').textContent='…';
+  document.getElementById('stat-failed').textContent='…';
+  document.getElementById('stat-avg').textContent='…';
+  updateCloudStatus('loading');
+  // Fetch all records (local + cloud merged)
+  _adminRecordsCache=await getAllRecords();
+  updateCloudStatus('done');
+  const records=_adminRecordsCache;
   const total=records.length;
   const passed=records.filter(r=>r.pct>=80).length;
   const failed=total-passed;
@@ -1722,8 +1915,33 @@ function renderAdminDashboard(){
   renderAdminTable();
 }
 
+function updateCloudStatus(state){
+  const el=document.getElementById('cloud-status');
+  if(!el)return;
+  if(!CONFIG.GOOGLE_SHEET_URL){
+    el.innerHTML='<span class="cloud-dot warn"></span>Local only — not connected to Google Sheets';
+    el.className='admin-cloud-status status-warn';
+    return;
+  }
+  if(state==='loading'){
+    el.innerHTML='<span class="cloud-dot loading"></span>Syncing with Google Sheets…';
+    el.className='admin-cloud-status status-loading';
+  } else if(state==='done'){
+    el.innerHTML='<span class="cloud-dot ok"></span>Connected to Google Sheets';
+    el.className='admin-cloud-status status-ok';
+  } else {
+    el.innerHTML='<span class="cloud-dot err"></span>Sheet unreachable — showing local only';
+    el.className='admin-cloud-status status-err';
+  }
+}
+
+async function refreshAdminData(){
+  await renderAdminDashboard();
+  chipAlert('Data refreshed.');
+}
+
 function renderAdminTable(){
-  const records=getScoreRecords();
+  const records=_adminRecordsCache;
   const search=(document.getElementById('admin-search')||{}).value?.toLowerCase()||'';
   const dayFilter=(document.getElementById('admin-day-filter')||{}).value||'';
   const passFilter=(document.getElementById('admin-pass-filter')||{}).value||'';
@@ -1801,10 +2019,10 @@ function toggleAnswerRow(btn,rowId){
 }
 
 function exportCSV(){
-  const records=getScoreRecords();
+  const records=_adminRecordsCache.length?_adminRecordsCache:getScoreRecords();
   if(!records.length){chipAlert('No records to export.');return;}
   const headers=['EmployeeID','Name','Day','DayName','Score','Pct','Correct','Total','Result','DateTime'];
-  const rows=records.map(r=>[r.empId,r.name,r.day,DAYS[r.day]?.name||'',r.score,r.pct,r.correct,r.total,(r.pct>=80?'PASSED':'FAILED'),r.datetime].join(','));
+  const rows=records.map(r=>[r.empId,r.name,r.day,DAYS[r.day]?.name||'',r.score,r.pct,r.correct,r.total,(r.pct>=80?'PASSED':'FAILED'),r.datetime].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
   const csv=[headers.join(','),...rows].join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
@@ -1916,6 +2134,23 @@ function switchQueue(type,btn){
   const badge=document.getElementById('queue-mode-badge');
   if(type==='incoming'){badge.textContent='Incoming';badge.style.cssText='background:#e8f5e9;color:#15803d;border:1px solid #bbf7d0;padding:2px 8px;border-radius:16px;font-size:9px;font-weight:700;';}
   else{badge.textContent='Reported';badge.style.cssText='background:#fef2f2;color:#c0392b;border:1px solid #fecaca;padding:2px 8px;border-radius:16px;font-size:9px;font-weight:700;';}
+  // If a question is currently displayed and not yet answered, reload it
+  // to show/hide owner response based on the new queue. If answered, just
+  // update visuals — they'll move on to next Q on advance.
+  if(activeQBank.length&&currentQIdx<activeQBank.length&&!answered){
+    loadQuestion();
+    startTimer();
+  } else if(activeQBank.length&&currentQIdx<activeQBank.length&&answered){
+    // Just refresh owner response visibility without resetting timer
+    const q=activeQBank[currentQIdx];
+    const isReported=currentQueue==='reported';
+    const ownerText=isReported?(OWNER_RESPONSES[q.id]||q.ownerResponse||'Property owner has been notified and is reviewing the report.'):'';
+    const hasOR=isReported&&ownerText;
+    document.getElementById('owner-review-label').style.display=hasOR?'block':'none';
+    const ownerEl=document.getElementById('owner-review');
+    ownerEl.style.display=hasOR?'block':'none';
+    if(hasOR){ownerEl.value=ownerText;ownerEl.readOnly=true;ownerEl.style.opacity='1';}
+  }
 }
 
 /* ════ LOAD QUESTION ════ */
@@ -1927,12 +2162,14 @@ function loadQuestion(){
   currentReviewerEmail=rev.email;
   const qNum=currentQIdx+1,total=activeQBank.length;
 
-  // Owner response visibility
-  const hasOR=!!q.ownerResponse;
+  // Owner response visibility — always shown when queue is Reported
+  const isReported=currentQueue==='reported';
+  const ownerText=isReported?(OWNER_RESPONSES[q.id]||q.ownerResponse||'Property owner has been notified and is reviewing the report.'):'';
+  const hasOR=isReported&&ownerText;
   document.getElementById('owner-review-label').style.display=hasOR?'block':'none';
   const ownerEl=document.getElementById('owner-review');
   ownerEl.style.display=hasOR?'block':'none';
-  if(hasOR){ownerEl.value=q.ownerResponse;ownerEl.readOnly=true;ownerEl.style.opacity='1';}
+  if(hasOR){ownerEl.value=ownerText;ownerEl.readOnly=true;ownerEl.style.opacity='1';}
 
   document.getElementById('ws-qnum').textContent='Q '+qNum+' / '+total;
   document.getElementById('sub-url-id').textContent=String(q.id).padStart(5,'0');
@@ -2072,7 +2309,7 @@ function openReasonModal(dec){
 }
 function onReasonChange(sel){document.getElementById('btn-modal-save').disabled=!sel.value;}
 function closeModal(){document.getElementById('reason-modal').classList.add('hidden');modalDec='';}
-function saveReason(){const reason=document.getElementById('modal-reason-select').value;if(!reason)return;closeModal();processDecision(modalDec,reason);}
+function saveReason(){const reason=document.getElementById('modal-reason-select').value;if(!reason)return;const dec=modalDec;closeModal();processDecision(dec,reason);}
 
 function processDecision(dec,reason){
   if(answered)return;
@@ -2238,9 +2475,12 @@ function endAssessment(){
   const passed=pct>=80;
   const correctCount=sessionLog.filter(l=>l.correct).length;
 
-  // Save to localStorage for admin
+  // Save to localStorage AND Google Sheet (if configured) for admin
   const rec={
-    empId,name:empName,day:selectedDay,score,pct,
+    empId,name:empName,
+    day:selectedDay,
+    dayName:DAYS[selectedDay]?.name||'',
+    score,pct,
     correct:correctCount,total:totalQ,
     datetime:new Date().toLocaleString('en-IN'),
     decisions:sessionLog.map(l=>({...l}))
