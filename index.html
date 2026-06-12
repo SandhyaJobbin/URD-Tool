@@ -51,8 +51,11 @@ select{cursor:pointer;}
 .admin-separator{display:flex;align-items:center;gap:10px;margin:14px 0 10px;}
 .admin-separator::before,.admin-separator::after{content:'';flex:1;height:1px;background:var(--bdr);}
 .admin-separator span{font-size:10px;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:1px;}
-.btn-admin-portal{width:100%;padding:11px;background:#fff;color:var(--admin);border:1.5px solid var(--admin);border-radius:var(--r);font-size:12px;font-weight:700;letter-spacing:.3px;transition:all var(--tr);cursor:pointer;}
+.trainer-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.btn-admin-portal{width:100%;padding:11px 8px;background:#fff;color:var(--admin);border:1.5px solid var(--admin);border-radius:var(--r);font-size:12px;font-weight:700;letter-spacing:.2px;transition:all var(--tr);cursor:pointer;}
 .btn-admin-portal:hover{background:var(--admin);color:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(26,35,126,.25);}
+.btn-upload-csv{width:100%;padding:11px 8px;background:#fff;color:var(--orange);border:1.5px solid var(--orange);border-radius:var(--r);font-size:12px;font-weight:700;letter-spacing:.2px;transition:all var(--tr);cursor:pointer;}
+.btn-upload-csv:hover{background:var(--orange);color:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(232,120,26,.25);}
 
 /* Manual/Admin option styling */
 .day-option-manual{color:var(--admin);font-weight:700;}
@@ -464,16 +467,41 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
         <option value="3">Day 3 — Harmful Content & Language</option>
         <option value="4">Day 4 — Fraud, Duplication & Misconduct</option>
         <option value="5">Day 5 — Advanced Moderation Decisions</option>
+        <option value="6">Day 6 — Serious Issues (Cloud)</option>
       </select>
       <div class="login-err" id="day-err">Please select a training day</div>
       <div class="day-info-box" id="day-info-box"></div>
     </div>
     <button class="btn-launch" id="btn-launch" disabled onclick="handleLaunch()">Launch Assessment →</button>
     <div class="admin-separator">
-      <span>or</span>
+      <span>trainer tools</span>
     </div>
-    <button class="btn-admin-portal" onclick="showAdminModal()">🔐 Admin Portal Access</button>
+    <div class="trainer-btn-row">
+      <button class="btn-admin-portal" onclick="showAdminModal()">🔐 Admin Portal</button>
+      <button class="btn-upload-csv" onclick="showUploadModal()">📤 Upload Day 6 CSV</button>
+    </div>
     <div class="login-fun-tips" id="login-tip">💡 <strong>Did you know?</strong> Real moderators review hundreds of reviews daily. This simulator trains your eye for subtle violations!</div>
+  </div>
+</div>
+
+<!-- ═══ UPLOAD CSV MODAL ═══ -->
+<div class="admin-modal-overlay hidden" id="upload-modal">
+  <div class="admin-modal-card" style="max-width:480px;width:min(480px,96vw);">
+    <div style="font-size:28px;margin-bottom:8px;text-align:center;">📤</div>
+    <h3 style="color:var(--orange);">Upload Day 6 Questions</h3>
+    <p class="admin-modal-sub">Upload a CSV file with serious-issue review scenarios. Each upload creates a new tab in your Google Sheet and becomes the active Day 6 question set for all users.</p>
+    <div class="admin-field">
+      <label>Trainer Password <span style="color:var(--red)">*</span></label>
+      <input type="password" id="upload-pass-input" placeholder="Enter password" autocomplete="off" oninput="onUploadPassInput()">
+    </div>
+    <div class="admin-field">
+      <label>CSV File <span style="color:var(--red)">*</span></label>
+      <input type="file" id="upload-file-input" accept=".csv,text/csv" disabled style="padding:8px 10px;font-size:12px;">
+      <div style="font-size:10.5px;color:var(--gray);margin-top:5px;line-height:1.5;">Use the provided <strong>URD_Day6_Template.xlsx</strong> as a starting point — save as CSV before upload.</div>
+    </div>
+    <div id="upload-status" style="font-size:11px;margin-top:8px;padding:8px 11px;border-radius:6px;display:none;line-height:1.5;"></div>
+    <button class="admin-login-btn" id="btn-do-upload" onclick="processUpload()" disabled style="background:var(--orange);margin-top:14px;">Upload to Google Sheet →</button>
+    <button class="admin-cancel-btn" onclick="closeUploadModal()">Cancel</button>
   </div>
 </div>
 
@@ -537,7 +565,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
             <option value="">All Days</option>
             <option value="1">Day 1</option><option value="2">Day 2</option>
             <option value="3">Day 3</option><option value="4">Day 4</option>
-            <option value="5">Day 5</option>
+            <option value="5">Day 5</option><option value="6">Day 6</option>
           </select>
           <select class="admin-filter-select" id="admin-pass-filter" onchange="renderAdminTable()">
             <option value="">All Results</option>
@@ -810,7 +838,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
 const CONFIG = {
   // Paste your Google Apps Script Web App URL here (the one ending in /exec)
   // Example: 'https://script.google.com/macros/s/AKfycb.../exec'
-  GOOGLE_SHEET_URL: 'https://script.google.com/macros/s/AKfycbxZldYPpS8DGeJHOjLv7TmDc3K1hRS2dmM_j5OsJW-1mVjODUmnRGMRSIBQms0-CBWd/exec',
+  GOOGLE_SHEET_URL: 'https://script.google.com/macros/s/AKfycbywkbkH0nQRAQn5_hodjlBEaOYvPDLQDotIOUFwhZnXlErOGjZoN2VI9OFyhVPD4MQ/exec',
 };
 
 /* ════════════════════════════════════════════════
@@ -1759,6 +1787,269 @@ const CORRECT_REASONS = {
 };
 
 /* ════════════════════════════════════════════════
+   DAY 6 — CLOUD-UPLOADED QUESTIONS
+   Trainer uploads a CSV. Apps Script stores it in a
+   new tab. Day 6 candidates fetch the latest set.
+════════════════════════════════════════════════ */
+
+// Day 6 cache (in-memory; refreshed each time user selects Day 6)
+let _day6Cache=null;
+let _day6Status=null;
+
+async function fetchDay6Questions(){
+  if(!CONFIG.GOOGLE_SHEET_URL)return [];
+  try{
+    const url=CONFIG.GOOGLE_SHEET_URL+(CONFIG.GOOGLE_SHEET_URL.includes('?')?'&':'?')+'action=get_day6';
+    const res=await fetch(url,{method:'GET'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    return Array.isArray(data)?data:[];
+  }catch(e){console.warn('Day 6 fetch failed:',e);return null;}
+}
+
+async function fetchDay6Status(){
+  if(!CONFIG.GOOGLE_SHEET_URL)return {active:false,count:0};
+  try{
+    const url=CONFIG.GOOGLE_SHEET_URL+(CONFIG.GOOGLE_SHEET_URL.includes('?')?'&':'?')+'action=day6_status';
+    const res=await fetch(url,{method:'GET'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    return await res.json();
+  }catch(e){return null;}
+}
+
+// Convert a sheet-row Day 6 question into the bank format used by loadQuestion
+function convertDay6Question(raw,idx){
+  const id=6000+idx+1;
+  const correctAction=String(raw.correct_action||'').trim().toLowerCase();
+  const correctReason=String(raw.correct_reason||'').trim();
+  const owner=String(raw.owner_response||'').trim();
+  const q={
+    id,
+    day:6,
+    policy:String(raw.policy_name||'Serious Issue').trim(),
+    title:String(raw.title||'(Untitled)').trim(),
+    body:String(raw.body||'').trim(),
+    ownerResponse:owner||null,
+    correct:correctAction||'publish',
+    expl:String(raw.explanation_correct||'Your decision matches the expected policy outcome.').trim(),
+    wrongExpl:String(raw.explanation_wrong||'Your decision does not match the expected policy outcome.').trim(),
+    rating:Math.max(1,Math.min(5,parseInt(raw.rating)||3)),
+    prop:String(raw.property_name||'Property').trim(),
+    exp:String(raw.experience_type||'Hotels').trim(),
+    date:String(raw.date||new Date().toISOString().slice(0,10)).trim(),
+  };
+  // Register the correct reason and owner response into the runtime lookups
+  CORRECT_REASONS[id]=correctReason||null;
+  if(owner)OWNER_RESPONSES[id]=owner;
+  return q;
+}
+
+/* ════════════════════════════════════════════════
+   CSV PARSING (RFC4180-ish)
+   Handles quoted fields, embedded commas/newlines,
+   and escaped quotes ("").
+════════════════════════════════════════════════ */
+
+function parseCSV(text){
+  const rows=[];
+  let cur='',row=[],inQuotes=false,i=0;
+  // Strip BOM if present
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  while(i<text.length){
+    const c=text[i];
+    if(inQuotes){
+      if(c==='"'){
+        if(text[i+1]==='"'){cur+='"';i+=2;continue;}
+        inQuotes=false;i++;continue;
+      }
+      cur+=c;i++;
+    } else {
+      if(c==='"'){inQuotes=true;i++;}
+      else if(c===','){row.push(cur);cur='';i++;}
+      else if(c==='\n'||c==='\r'){
+        row.push(cur);cur='';
+        // Skip blank lines
+        if(row.length>1||(row[0]||'').trim()!=='')rows.push(row);
+        row=[];
+        if(c==='\r'&&text[i+1]==='\n')i++;
+        i++;
+      } else {cur+=c;i++;}
+    }
+  }
+  if(cur!==''||row.length>0){row.push(cur);if(row.some(c=>c.trim()!==''))rows.push(row);}
+  return rows;
+}
+
+const DAY6_REQUIRED_COLS=['title','body','correct_action'];
+const DAY6_OPTIONAL_COLS=['correct_reason','explanation_correct','explanation_wrong','rating','property_name','experience_type','date','policy_name','owner_response'];
+const DAY6_VALID_ACTIONS=['publish','moderation_remove','member_fraud','property_fraud'];
+
+function parseCSVToQuestions(csvText){
+  const rows=parseCSV(csvText);
+  if(rows.length<2)throw new Error('CSV needs at least a header row and one data row.');
+
+  const headers=rows[0].map(h=>String(h||'').trim().toLowerCase());
+  const missing=DAY6_REQUIRED_COLS.filter(c=>!headers.includes(c));
+  if(missing.length>0)throw new Error('Missing required columns: '+missing.join(', ')+'. Required: '+DAY6_REQUIRED_COLS.join(', '));
+
+  const questions=[];
+  const errors=[];
+  for(let i=1;i<rows.length;i++){
+    const row=rows[i];
+    if(row.every(c=>!String(c||'').trim()))continue;
+    const q={};
+    headers.forEach((h,j)=>{q[h]=String(row[j]||'').trim();});
+
+    if(!q.title){errors.push('Row '+(i+1)+': missing title');continue;}
+    if(!q.body){errors.push('Row '+(i+1)+': missing body');continue;}
+    const action=q.correct_action.toLowerCase();
+    if(!DAY6_VALID_ACTIONS.includes(action)){
+      errors.push('Row '+(i+1)+': invalid correct_action "'+q.correct_action+'" — must be one of: '+DAY6_VALID_ACTIONS.join(', '));
+      continue;
+    }
+    q.correct_action=action;
+    // Reason must match dropdown when action is a Remove
+    if(action!=='publish'){
+      const pool=REASON_SETS[action]||[];
+      if(!q.correct_reason){errors.push('Row '+(i+1)+': correct_reason required for '+action+' (one of: '+pool.slice(0,5).join(', ')+'…)');continue;}
+      // case-insensitive find
+      const found=pool.find(r=>r.toLowerCase()===q.correct_reason.toLowerCase());
+      if(!found){
+        errors.push('Row '+(i+1)+': correct_reason "'+q.correct_reason+'" not valid for '+action+'. Valid options listed in the template.');
+        continue;
+      }
+      q.correct_reason=found;
+    } else {
+      q.correct_reason='';
+    }
+    questions.push(q);
+  }
+  if(errors.length>0&&questions.length===0)throw new Error('All rows failed validation:\n'+errors.slice(0,5).join('\n'));
+  return {questions,errors};
+}
+
+/* ════════════════════════════════════════════════
+   UPLOAD MODAL
+════════════════════════════════════════════════ */
+
+function showUploadModal(){
+  document.getElementById('upload-modal').classList.remove('hidden');
+  document.getElementById('upload-pass-input').value='';
+  document.getElementById('upload-file-input').value='';
+  document.getElementById('upload-file-input').disabled=true;
+  document.getElementById('btn-do-upload').disabled=true;
+  document.getElementById('upload-status').style.display='none';
+}
+function closeUploadModal(){document.getElementById('upload-modal').classList.add('hidden');}
+
+function onUploadPassInput(){
+  const pass=document.getElementById('upload-pass-input').value;
+  const fileInput=document.getElementById('upload-file-input');
+  const btn=document.getElementById('btn-do-upload');
+  const status=document.getElementById('upload-status');
+  if(pass===ADMIN_PASSWORD){
+    fileInput.disabled=false;
+    btn.disabled=false;
+    status.style.display='block';
+    status.style.background='#e8f5e9';
+    status.style.color='#15803d';
+    status.style.border='1px solid #bbf7d0';
+    status.textContent='✓ Password accepted. Select a CSV file and click Upload.';
+  } else {
+    fileInput.disabled=true;
+    btn.disabled=true;
+    if(pass.length>0){
+      status.style.display='block';
+      status.style.background='#fef2f2';
+      status.style.color='#c0392b';
+      status.style.border='1px solid #fecaca';
+      status.textContent='✗ Password incorrect.';
+    } else {
+      status.style.display='none';
+    }
+  }
+}
+
+async function processUpload(){
+  const status=document.getElementById('upload-status');
+  const btn=document.getElementById('btn-do-upload');
+  const pass=document.getElementById('upload-pass-input').value;
+  if(pass!==ADMIN_PASSWORD){
+    status.style.display='block';
+    status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+    status.textContent='✗ Password incorrect.';
+    return;
+  }
+  const file=document.getElementById('upload-file-input').files[0];
+  if(!file){
+    status.style.display='block';
+    status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+    status.textContent='✗ Please select a CSV file.';
+    return;
+  }
+  if(!CONFIG.GOOGLE_SHEET_URL){
+    status.style.display='block';
+    status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+    status.innerHTML='✗ Google Sheets not configured. Paste your Apps Script URL into <code>CONFIG.GOOGLE_SHEET_URL</code> at the top of this HTML file.';
+    return;
+  }
+
+  btn.disabled=true;
+  status.style.display='block';
+  status.style.background='#fff3e0';status.style.color='#c5650e';status.style.border='1px solid #ffd4b8';
+  status.textContent='Parsing CSV…';
+
+  let parsed;
+  try{
+    const text=await file.text();
+    parsed=parseCSVToQuestions(text);
+  }catch(e){
+    status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+    status.innerHTML='✗ Parse error:<br>'+String(e.message||e).replace(/\n/g,'<br>');
+    btn.disabled=false;
+    return;
+  }
+
+  status.textContent='Uploading '+parsed.questions.length+' questions to Google Sheets…';
+  try{
+    const res=await fetch(CONFIG.GOOGLE_SHEET_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        type:'upload_day6',
+        filename:file.name,
+        questions:parsed.questions
+      })
+    });
+    // Apps Script returns JSON; try to read it
+    let result={ok:true};
+    try{result=await res.json();}catch(e){}
+    if(result.ok===false){
+      status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+      status.textContent='✗ Server error: '+(result.error||'unknown');
+      btn.disabled=false;
+      return;
+    }
+    status.style.background='#e8f5e9';status.style.color='#15803d';status.style.border='1px solid #bbf7d0';
+    let msg='✓ Successfully uploaded <strong>'+parsed.questions.length+'</strong> questions';
+    if(result.tab)msg+=' into new tab <code>'+result.tab+'</code>';
+    msg+='. Day 6 is now ready for candidates!';
+    if(parsed.errors&&parsed.errors.length>0){
+      msg+='<br><br><span style="color:var(--orange);font-size:10px;">Note: '+parsed.errors.length+' row(s) skipped due to validation errors.</span>';
+    }
+    status.innerHTML=msg;
+    // Invalidate Day 6 cache so next selection re-fetches
+    _day6Cache=null;_day6Status=null;
+    btn.disabled=false;
+    btn.textContent='Upload Another →';
+  }catch(e){
+    status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+    status.textContent='✗ Upload failed: '+String(e.message||e);
+    btn.disabled=false;
+  }
+}
+
+/* ════════════════════════════════════════════════
    DAY CONFIG
 ════════════════════════════════════════════════ */
 const DAYS = {
@@ -1767,6 +2058,7 @@ const DAYS = {
   3:{name:'Harmful Content & Language',desc:'Detect and action harmful content — Multiple Listings, Profane/Vulgar language, Discriminatory Language, Threatening Language, Sexually Explicit content, Illegal Activities, and Private Information exposure.'},
   4:{name:'Fraud, Duplication & Misconduct',desc:'Identify fraud patterns — Duplicate reviews, Fraud Allegations, Blackmail, Bullying, Incentives — across Member Fraud and Property Fraud categories.'},
   5:{name:'Advanced Moderation Decisions',desc:'Apply advanced policy judgement across Property Fraud (Boosting, Vandalism, Incentives), Member Fraud (Bombing, Marketing, Resubmission), Listing Updates, Rating mismatches, and valid publishing decisions.'},
+  6:{name:'Serious Issues',desc:'Reviews uploaded by your trainer covering current serious issues, escalations, and high-priority moderation scenarios. Question set is updated whenever the trainer uploads a new CSV.'},
 };
 
 const FUN_TIPS = [
@@ -2056,15 +2348,30 @@ const DAY_DESCRIPTIONS={
   3:'Focus: Multiple Listings · Profane/Vulgar · Discriminatory · Threatening · Sexually Explicit · Illegal Activity · Private Information',
   4:'Focus: Duplicate · Allegation of Fraud · Blackmail · Bullying · Incentives — plus Member Fraud & Property Fraud patterns',
   5:'Focus: Property Fraud (Boosting/Vandalism/Incentives) · Member Fraud (Bombing/Marketing/Resubmission) · Listing Updates · Rating Issues · Publishing Decisions',
+  6:'Focus: Trainer-uploaded serious issues — content varies based on the latest CSV upload by your trainer.',
 };
 
-function onDayChange(){
+async function onDayChange(){
   const sel=document.getElementById('login-day');
   const box=document.getElementById('day-info-box');
   const v=sel.value;
   if(v&&DAYS[v]){
     box.style.display='block';
     box.innerHTML=`<strong>${DAYS[v].name}</strong><br>${DAY_DESCRIPTIONS[v]}`;
+    if(v==='6'){
+      // Show live cloud status
+      box.innerHTML+=`<br><br><span id="d6-status" style="color:var(--gray);">⏳ Checking cloud for uploaded questions…</span>`;
+      if(!CONFIG.GOOGLE_SHEET_URL){
+        document.getElementById('d6-status').innerHTML='<span style="color:var(--red);">⚠ Google Sheets not configured — Day 6 requires a connected sheet. Ask your trainer.</span>';
+      } else {
+        const status=await fetchDay6Status();
+        const el=document.getElementById('d6-status');
+        if(!el)return;
+        if(!status){el.innerHTML='<span style="color:var(--red);">⚠ Cannot reach Google Sheet — check your connection.</span>';}
+        else if(!status.active||status.count===0){el.innerHTML='<span style="color:var(--orange);">⚠ No Day 6 questions uploaded yet. Ask your trainer to upload a CSV.</span>';}
+        else {el.innerHTML='<span style="color:var(--green-d);font-weight:700;">☁ '+status.count+' questions available (most recent upload)</span>';}
+      }
+    }
   } else {
     box.style.display='none';
   }
@@ -2083,28 +2390,67 @@ function goOnboarding(){
   document.getElementById('phase-onboarding').style.display='flex';
 }
 
-function goWorkspace(){
+async function goWorkspace(){
   document.getElementById('phase-onboarding').style.display='none';
   document.getElementById('phase-workspace').style.display='flex';
   document.getElementById('sub-reviewer-id').textContent='Reviewer: '+maskId(empId);
   document.getElementById('classifier-val').textContent=empName;
   document.getElementById('day-mode-badge').textContent='Day '+selectedDay+' — '+DAYS[selectedDay].name;
-  buildDayBank();
+  // Loading state for Day 6
+  if(selectedDay===6){
+    document.getElementById('review-title-text').textContent='Loading Day 6 questions from cloud…';
+    document.getElementById('review-body-text').textContent='Fetching the latest serious-issue review set uploaded by your trainer.';
+    setActionsEnabled(false);
+  }
+  const result=await buildDayBank();
+  if(result&&result.error){
+    document.getElementById('phase-workspace').style.display='none';
+    document.getElementById('phase-onboarding').style.display='flex';
+    showLoadError(result.error);
+    return;
+  }
   loadQuestion();
   startTimer();
+}
+
+function showLoadError(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border:2px solid var(--red);border-radius:14px;padding:28px 32px;max-width:420px;text-align:center;z-index:9999;box-shadow:0 20px 60px rgba(0,0,0,.25);';
+  t.innerHTML='<div style="font-size:38px;margin-bottom:8px;">⚠</div><div style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:6px;">Day 6 Not Ready</div><div style="font-size:12px;color:var(--ink);line-height:1.6;margin-bottom:16px;">'+msg+'</div><button onclick="this.parentNode.remove()" style="padding:8px 22px;background:var(--ink);color:#fff;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;">OK</button>';
+  document.body.appendChild(t);
 }
 
 /* ════ BANK ════ */
 function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
 
-function buildDayBank(){
-  let pool=FULL_BANK.filter(q=>q.day===selectedDay);
+async function buildDayBank(){
+  let pool;
+  if(selectedDay===6){
+    // Day 6 — fetch from Google Sheets
+    if(!CONFIG.GOOGLE_SHEET_URL){
+      activeQBank=[];
+      return {error:'Google Sheets not configured. Day 6 requires a connected sheet.'};
+    }
+    const raw=await fetchDay6Questions();
+    if(raw===null){
+      activeQBank=[];
+      return {error:'Cannot reach Google Sheet. Check your connection or the configured URL.'};
+    }
+    if(raw.length===0){
+      activeQBank=[];
+      return {error:'No Day 6 questions have been uploaded yet. Ask your trainer to upload a CSV.'};
+    }
+    pool=raw.map((q,i)=>convertDay6Question(q,i));
+  } else {
+    pool=FULL_BANK.filter(q=>q.day===selectedDay);
+  }
   pool=shuffle([...pool]);
   activeQBank=pool.slice(0,Math.min(15,pool.length));
   currentQIdx=0;score=0;answered=false;
   telemetry=[];sessionLog=[];
   updateScore();
   updateSampleIdsDropdown();
+  return {ok:true};
 }
 
 function updateSampleIdsDropdown(){
@@ -2565,10 +2911,12 @@ function downloadCert(){
   doc.save(safeName+'_'+empId+'_Day'+selectedDay+'_URDSimulator_Certificate.pdf');
 }
 
-function retake(){
+async function retake(){
   document.getElementById('phase-results').style.display='none';
   document.getElementById('phase-workspace').style.display='flex';
-  buildDayBank();loadQuestion();startTimer();
+  const result=await buildDayBank();
+  if(result&&result.error){showLoadError(result.error);return;}
+  loadQuestion();startTimer();
 }
 
 // Rotate tips on page load
