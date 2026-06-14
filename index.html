@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>URD Simulator — Content Moderation Training</title>
+<title>URD Simulator — Trust & Safety Simulation Tool</title>
 <style>
 :root{
   --green:#34E0A1;--green-d:#00AF87;--black:#111;--ink:#1a1a1a;
@@ -446,7 +446,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
       <div class="tool-sub">User Review Decision · Training Platform</div>
     </div>
     <div class="login-divider"></div>
-    <h2 class="login-title">Content Moderation Assessment</h2>
+    <h2 class="login-title">Trust & Safety Simulation Tool</h2>
     <p class="login-sub">Enter your details to access your personalised training session.</p>
     <div class="login-field">
       <label>Employee ID <span style="color:var(--red)">*</span></label>
@@ -472,7 +472,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
       <div class="login-err" id="day-err">Please select a training day</div>
       <div class="day-info-box" id="day-info-box"></div>
     </div>
-    <button class="btn-launch" id="btn-launch" disabled onclick="handleLaunch()">Launch Assessment →</button>
+    <button class="btn-launch" id="btn-launch" disabled onclick="handleLaunch()">Lets practice →</button>
     <div class="admin-separator">
       <span>trainer tools</span>
     </div>
@@ -593,7 +593,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
           </thead>
           <tbody id="admin-tbody"></tbody>
         </table>
-        <div class="admin-empty" id="admin-empty">No records yet. Candidates need to complete the assessment for results to appear here.</div>
+        <div class="admin-empty" id="admin-empty">No records yet. Candidates need to complete the session for results to appear here.</div>
       </div>
     </div>
   </div>
@@ -641,7 +641,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
         <div class="rule-row"><div class="rule-emoji">📜</div><p><strong>Certificate issued</strong> with your name, Day number and Policy upon scoring 80% or above.</p></div>
         <div class="rule-row"><div class="rule-emoji">🔒</div><p><strong>Must decide</strong> before navigating — you cannot skip a question without answering.</p></div>
       </div>
-      <button class="btn-begin" onclick="goWorkspace()">Start Assessment 🚀</button>
+      <button class="btn-begin" onclick="goWorkspace()">Lets Practice 🚀</button>
       <div class="fun-strip">
         <div class="fun-strip-item">Read Carefully</div>
         <div class="fun-strip-item">Check the Signals</div>
@@ -818,7 +818,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
           <div class="cert-foot">Verified · URD Simulator · Authentic Certificate of Completion</div>
         </div>
         <button class="btn-download-cert" id="btn-dl-cert" onclick="downloadCert()">Download Certificate (PDF)</button>
-        <button class="btn-retake" onclick="retake()">Retake Assessment</button>
+        <button class="btn-retake" onclick="retake()">Try again</button>
       </div>
     </div>
   </div>
