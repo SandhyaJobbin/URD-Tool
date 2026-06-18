@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>URD Simulator — Trust & Safety Simulation Tool</title>
+<title>URD Simulator — Content Moderation Training</title>
 <style>
 :root{
   --green:#34E0A1;--green-d:#00AF87;--black:#111;--ink:#1a1a1a;
@@ -284,6 +284,27 @@ table.admin-table tr.row-fail:hover td{background:#fff0f0;}
 .hist-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
 .hist-pub{color:var(--green-d);font-weight:600;}
 .hist-rem{color:var(--red);font-weight:600;}
+/* Same IP Reviews tool buttons (always visible) */
+.memhist-tools{display:flex;gap:4px;padding:6px 8px;background:#f8f8fb;border-top:1px solid var(--bdr);}
+.memhist-tool-btn{flex:1;font-size:9.5px;font-weight:700;padding:5px 4px;border:1px solid #c7d0e5;border-radius:5px;background:#fff;color:#324a6e;cursor:pointer;transition:all var(--tr);letter-spacing:.1px;}
+.memhist-tool-btn:hover{background:#324a6e;color:#fff;border-color:#324a6e;transform:translateY(-1px);box-shadow:0 2px 5px rgba(50,74,110,.2);}
+.memhist-tool-btn:active{transform:translateY(0);}
+/* Dupe / Property check popup */
+.check-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:2500;display:flex;align-items:center;justify-content:center;padding:16px;}
+.check-popup-card{background:#fff;border-radius:14px;padding:24px 28px 20px;width:min(420px,96vw);box-shadow:0 24px 60px rgba(0,0,0,.3);border-top:5px solid transparent;text-align:center;animation:popupIn .22s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popupIn{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
+.check-popup-card.ok{border-top-color:var(--green-d);}
+.check-popup-card.bad{border-top-color:var(--red);}
+.check-popup-icon{font-size:42px;margin-bottom:8px;line-height:1;}
+.check-popup-title{font-size:16px;font-weight:800;margin-bottom:6px;}
+.check-popup-title.ok{color:var(--green-d);}
+.check-popup-title.bad{color:var(--red);}
+.check-popup-body{font-size:12px;color:var(--ink);line-height:1.6;margin-bottom:6px;}
+.check-popup-detail{display:inline-block;background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:6px 12px;font-size:10.5px;color:var(--gray);margin-bottom:14px;font-weight:600;}
+.check-popup-detail.bad{background:#fff5f5;border-color:#fecaca;color:#8b0000;}
+.check-popup-detail.ok{background:#f0fdf4;border-color:#bbf7d0;color:#15803d;}
+.check-popup-close{padding:8px 26px;background:var(--ink);color:#fff;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:background var(--tr);}
+.check-popup-close:hover{background:#333;}
 .review-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
 .review-header-row span{font-size:9.5px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.4px;}
 .lang-select-sm{padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;font-size:9.5px;color:var(--ink);}
@@ -446,7 +467,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
       <div class="tool-sub">User Review Decision · Training Platform</div>
     </div>
     <div class="login-divider"></div>
-    <h2 class="login-title">Trust & Safety Simulation Tool</h2>
+    <h2 class="login-title">Content Moderation Assessment</h2>
     <p class="login-sub">Enter your details to access your personalised training session.</p>
     <div class="login-field">
       <label>Employee ID <span style="color:var(--red)">*</span></label>
@@ -472,7 +493,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
       <div class="login-err" id="day-err">Please select a training day</div>
       <div class="day-info-box" id="day-info-box"></div>
     </div>
-    <button class="btn-launch" id="btn-launch" disabled onclick="handleLaunch()">Lets practice →</button>
+    <button class="btn-launch" id="btn-launch" disabled onclick="handleLaunch()">Launch Assessment →</button>
     <div class="admin-separator">
       <span>trainer tools</span>
     </div>
@@ -593,7 +614,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
           </thead>
           <tbody id="admin-tbody"></tbody>
         </table>
-        <div class="admin-empty" id="admin-empty">No records yet. Candidates need to complete the session for results to appear here.</div>
+        <div class="admin-empty" id="admin-empty">No records yet. Candidates need to complete the assessment for results to appear here.</div>
       </div>
     </div>
   </div>
@@ -641,7 +662,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
         <div class="rule-row"><div class="rule-emoji">📜</div><p><strong>Certificate issued</strong> with your name, Day number and Policy upon scoring 80% or above.</p></div>
         <div class="rule-row"><div class="rule-emoji">🔒</div><p><strong>Must decide</strong> before navigating — you cannot skip a question without answering.</p></div>
       </div>
-      <button class="btn-begin" onclick="goWorkspace()">Lets Practice 🚀</button>
+      <button class="btn-begin" onclick="goWorkspace()">Start Assessment 🚀</button>
       <div class="fun-strip">
         <div class="fun-strip-item">Read Carefully</div>
         <div class="fun-strip-item">Check the Signals</div>
@@ -700,7 +721,13 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
             <div class="collapsible"><div class="collapsible-header" onclick="toggleSec('karma')"><h4>Member Karma</h4><div class="toggle-btn" id="toggle-karma">−</div></div><div class="collapsible-body" id="body-karma"></div></div>
             <div class="collapsible"><div class="collapsible-header" onclick="toggleSec('device')"><h4>Device &amp; Technical</h4><div class="toggle-btn" id="toggle-device">−</div></div><div class="collapsible-body" id="body-device"><div class="info-grid" id="device-data"></div></div></div>
             <div class="collapsible"><div class="collapsible-header" onclick="toggleSec('memhist-same-member')"><h4>Member Reviews</h4><div class="toggle-btn" id="toggle-memhist-same-member">+</div></div><div class="collapsible-body closed" id="body-memhist-same-member"></div></div>
-            <div class="collapsible"><div class="collapsible-header" onclick="toggleSec('memhist-same-ip')"><h4>Same IP Reviews</h4><div class="toggle-btn" id="toggle-memhist-same-ip">+</div></div><div class="collapsible-body closed" id="body-memhist-same-ip"></div></div>
+            <div class="collapsible"><div class="collapsible-header" onclick="toggleSec('memhist-same-ip')"><h4>Same IP Reviews</h4><div class="toggle-btn" id="toggle-memhist-same-ip">+</div></div>
+              <div class="memhist-tools">
+                <button class="memhist-tool-btn" onclick="checkDupe(event)">🔍 Dupe Check</button>
+                <button class="memhist-tool-btn" onclick="checkProperty(event)">🏠 Property Details</button>
+              </div>
+              <div class="collapsible-body closed" id="body-memhist-same-ip"></div>
+            </div>
           </div>
           <div class="qleft-col2">
             <div class="collapsible"><div class="collapsible-header" onclick="toggleSec('revinfo')"><h4>Review Info</h4><div class="toggle-btn" id="toggle-revinfo">−</div></div><div class="collapsible-body" id="body-revinfo"></div></div>
@@ -709,8 +736,8 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
               <div class="review-header-row"><span>Review Content</span><select class="lang-select-sm" onchange="translateReview(this.value)"><option>English</option><option>Spanish</option><option>French</option><option>German</option><option>Italian</option></select></div>
               <div class="review-title-text" id="review-title-text"></div>
               <div class="review-body-text" id="review-body-text"></div>
-              <div class="comment-label" id="owner-review-label" style="display:none;">Owner Response <span id="owner-review-badge" style="font-size:8px;font-weight:600;background:#f3e8ff;color:#7B2D8B;border:1px solid #d8b4fe;border-radius:10px;padding:1px 7px;">Property submitted</span></div>
-              <textarea class="comment-box" id="owner-review" placeholder="Property owner response…" style="display:none;border-color:#8E44AD;background:#fdf8ff;min-height:58px;font-size:10px;"></textarea>
+              <div class="comment-label" id="owner-review-label" style="display:none;">Voter comment <span id="owner-review-badge" style="font-size:8px;font-weight:600;background:#f3e8ff;color:#7B2D8B;border:1px solid #d8b4fe;border-radius:10px;padding:1px 7px;">Voter submitted</span></div>
+              <textarea class="comment-box" id="owner-review" placeholder="Voter comment / report reason…" style="display:none;border-color:#8E44AD;background:#fdf8ff;min-height:58px;font-size:10px;"></textarea>
               <div class="comment-label">Moderator Comment</div>
               <textarea class="comment-box" id="mod-comment" placeholder="Add your moderation comment here…"></textarea>
             </div>
@@ -818,7 +845,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
           <div class="cert-foot">Verified · URD Simulator · Authentic Certificate of Completion</div>
         </div>
         <button class="btn-download-cert" id="btn-dl-cert" onclick="downloadCert()">Download Certificate (PDF)</button>
-        <button class="btn-retake" onclick="retake()">Try again</button>
+        <button class="btn-retake" onclick="retake()">Retake Assessment</button>
       </div>
     </div>
   </div>
@@ -1787,6 +1814,99 @@ const CORRECT_REASONS = {
 };
 
 /* ════════════════════════════════════════════════
+   DUPE CHECK & PROPERTY DETAILS (Same IP Reviews tools)
+════════════════════════════════════════════════ */
+
+// Map each Duplicate-policy question to a specific sub-category for the popup.
+// All other questions get "No dupe content found".
+const DUPE_SUBCATEGORY = {
+  4001:'Completed copy — same user (two accounts, same property)',
+  4002:'Completed copy — fraud pattern (verbatim text from another reviewer)',
+};
+
+function checkDupe(evt){
+  if(evt&&evt.stopPropagation)evt.stopPropagation();
+  if(!activeQBank.length||currentQIdx>=activeQBank.length){
+    showCheckPopup({ok:true,icon:'✓',title:'No dupe content found',body:'No question is currently loaded.',detail:''});
+    return;
+  }
+  const q=activeQBank[currentQIdx];
+  // For built-in Duplicate questions OR Day 6 uploaded questions whose
+  // correct_reason is "Duplicate", show the duplicate-found popup.
+  const isDuplicate=(CORRECT_REASONS[q.id]||'').toLowerCase()==='duplicate';
+  if(isDuplicate){
+    const subCat=DUPE_SUBCATEGORY[q.id]||'Completed copy (fraud pattern, same user or same traveling party)';
+    showCheckPopup({
+      ok:false,
+      icon:'⚠',
+      title:'Duplicate found',
+      body:'This review matches a known duplicate pattern. The system has flagged it for moderation review.',
+      detail:'Pattern: '+subCat
+    });
+  } else {
+    showCheckPopup({
+      ok:true,
+      icon:'✓',
+      title:'No dupe content found',
+      body:'This review is unique. No matching text, fingerprint or pattern detected in the database.',
+      detail:'Pattern: Original content'
+    });
+  }
+}
+
+function checkProperty(evt){
+  if(evt&&evt.stopPropagation)evt.stopPropagation();
+  if(!activeQBank.length||currentQIdx>=activeQBank.length){
+    showCheckPopup({ok:true,icon:'🏠',title:'Property verified',body:'No question is currently loaded.',detail:''});
+    return;
+  }
+  const q=activeQBank[currentQIdx];
+  // Day 4/5/6 questions with member_fraud or property_fraud as the correct action
+  // show "Affiliation found". Days 1-3 and other Day 4/5 questions show "Verified".
+  const dayHasFraudCheck=(q.day===4||q.day===5||q.day===6);
+  const isFraudCorrect=(q.correct==='member_fraud'||q.correct==='property_fraud');
+  if(dayHasFraudCheck&&isFraudCorrect){
+    showCheckPopup({
+      ok:false,
+      icon:'⚠',
+      title:'Affiliation found',
+      body:'Fraud activities detected for this account. The reviewer has links to other suspicious accounts or activity patterns.',
+      detail:'Status: Affiliation found · Fraud activities'
+    });
+  } else {
+    showCheckPopup({
+      ok:true,
+      icon:'🏠',
+      title:'Property verified',
+      body:'No affiliation found. The property check returned a clean record — this looks like a genuine, independent reviewer.',
+      detail:'Status: Verified · No affiliation · All genuine'
+    });
+  }
+}
+
+function showCheckPopup(opts){
+  // Remove any existing popup first
+  const existing=document.getElementById('check-popup');
+  if(existing)existing.remove();
+  const overlay=document.createElement('div');
+  overlay.className='check-popup-overlay';
+  overlay.id='check-popup';
+  overlay.onclick=(e)=>{if(e.target===overlay)overlay.remove();};
+  const card=document.createElement('div');
+  card.className='check-popup-card '+(opts.ok?'ok':'bad');
+  card.innerHTML=`
+    <div class="check-popup-icon" style="color:${opts.ok?'var(--green-d)':'var(--red)'}">${opts.icon||''}</div>
+    <div class="check-popup-title ${opts.ok?'ok':'bad'}">${opts.title||''}</div>
+    <div class="check-popup-body">${opts.body||''}</div>
+    ${opts.detail?'<div class="check-popup-detail '+(opts.ok?'ok':'bad')+'">'+opts.detail+'</div>':''}
+    <br>
+    <button class="check-popup-close" onclick="document.getElementById('check-popup').remove()">OK</button>
+  `;
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+}
+
+/* ════════════════════════════════════════════════
    DAY 6 — CLOUD-UPLOADED QUESTIONS
    Trainer uploads a CSV. Apps Script stores it in a
    new tab. Day 6 candidates fetch the latest set.
@@ -2529,7 +2649,8 @@ function loadQuestion(){
     <div class="info-row"><span class="info-lbl">Username:</span><span class="info-val">${mask(rev.username,3)}</span></div>
     <div class="info-row"><span class="info-lbl">Member ID:</span><span class="info-val masked">${maskId(rev.memberId)}</span></div>
     <div class="info-row"><span class="info-lbl">Location:</span><span class="info-val">${mask(rev.location,3)}</span></div>
-    <div class="info-row"><span class="info-lbl">Password:</span><span class="info-val">••••••••</span></div>
+    <div class="info-row"><span class="info-lbl">Member type:</span><span class="info-val" style="color:#8b6914;font-weight:700;">Owner of same geo property</span></div>
+    <div class="info-row" style="grid-column:1 / -1;"><span class="info-lbl">Password:</span><span class="info-val">••••••••</span></div>
   `;
 
   const acctAge=(Math.random()*8+1).toFixed(1);
