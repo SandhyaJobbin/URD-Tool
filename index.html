@@ -42,6 +42,10 @@ select{cursor:pointer;}
 .login-err{font-size:10px;color:var(--red);margin-top:3px;display:none;}
 .day-info-box{background:linear-gradient(135deg,#f0fff8,#e8fdf5);border:1px solid rgba(0,175,135,.2);border-radius:var(--r);padding:10px 13px;margin-top:6px;font-size:10px;color:var(--gray);line-height:1.6;display:none;}
 .day-info-box strong{color:var(--green-d);}
+/* OR divider between Day and Batch */
+.batch-divider{display:flex;align-items:center;gap:10px;margin:6px 0;}
+.batch-divider::before,.batch-divider::after{content:'';flex:1;height:1px;background:var(--bdr);}
+.batch-divider span{font-size:9px;color:var(--gray);font-weight:800;letter-spacing:1.5px;}
 .btn-launch{width:100%;padding:13px;background:linear-gradient(135deg,var(--green-d),#00c49a);color:#fff;border-radius:var(--r);font-size:14px;font-weight:800;transition:all var(--tr);margin-top:8px;letter-spacing:.3px;box-shadow:0 4px 15px rgba(0,175,135,.3);}
 .btn-launch:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
 .btn-launch:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,175,135,.4);}
@@ -105,6 +109,26 @@ select{cursor:pointer;}
 .admin-stat-val{font-size:32px;font-weight:900;color:var(--ink);}
 .admin-stat-lbl{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-top:2px;}
 .admin-table-card{background:#fff;border-radius:12px;box-shadow:var(--sh);overflow:hidden;}
+/* Batches section above scores */
+.admin-batches-card{background:#fff;border-radius:12px;box-shadow:var(--sh);overflow:hidden;margin-bottom:18px;}
+.admin-batches-header{padding:14px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:linear-gradient(135deg,#f0fff8,#f9fffc);}
+.admin-batches-header h3{font-size:13px;font-weight:800;color:#00875a;margin:0;letter-spacing:.2px;}
+.admin-create-batch-btn{background:linear-gradient(135deg,#00AF87 0%,#00875a 100%);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:11.5px;font-weight:800;cursor:pointer;letter-spacing:.3px;transition:all var(--tr);box-shadow:0 3px 10px rgba(0,175,135,.25);}
+.admin-create-batch-btn:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(0,175,135,.4);}
+.admin-batches-list{padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;max-height:240px;overflow-y:auto;}
+.admin-batch-card{background:linear-gradient(135deg,#fafbff,#f0f5ff);border:1px solid #d8e1f2;border-left:4px solid #00AF87;border-radius:8px;padding:11px 13px;font-size:10.5px;line-height:1.6;}
+.admin-batch-card .bn{font-weight:800;color:#002b5c;font-size:12px;display:block;margin-bottom:3px;}
+.admin-batch-card .bd{color:#5a6a85;font-size:10px;}
+.admin-batch-card .bm{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px dashed #d8e1f2;}
+.admin-batch-card .bc{background:#00AF87;color:#fff;font-weight:700;font-size:9px;padding:2px 8px;border-radius:10px;}
+.admin-batch-card .bid{font-family:monospace;font-size:8.5px;color:#9aa4ba;}
+/* Expanded filter grid */
+.admin-filters{padding:14px 18px;border-bottom:1px solid var(--bdr);background:#fafbff;}
+.admin-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;}
+.admin-filter-grid .admin-search-input{grid-column:span 2;}
+@media (max-width:900px){.admin-filter-grid .admin-search-input{grid-column:span 1;}}
+.admin-export-btn{background:linear-gradient(135deg,#3aa569 0%,#2a8550 100%);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:11px;font-weight:700;cursor:pointer;transition:all var(--tr);}
+.admin-export-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(58,165,105,.4);}
 .admin-table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--bdr);}
 .admin-table-header h3{font-size:14px;font-weight:700;color:var(--ink);}
 .admin-filter-row{display:flex;gap:8px;align-items:center;}
@@ -480,7 +504,13 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
       <div class="login-err" id="name-err">Please enter your full name (min 2 chars)</div>
     </div>
     <div class="login-field">
-      <label>Select Training Day <span style="color:var(--red)">*</span></label>
+      <label>Country <span style="color:var(--red)">*</span></label>
+      <select id="login-country" onchange="validateLogin()">
+        <option value="">— Select your country —</option>
+      </select>
+    </div>
+    <div class="login-field">
+      <label>Select Training Day</label>
       <select id="login-day" onchange="onDayChange()">
         <option value="">— Choose a day —</option>
         <option value="1">Day 1 — Review Quality Policies</option>
@@ -493,6 +523,14 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
       <div class="login-err" id="day-err">Please select a training day</div>
       <div class="day-info-box" id="day-info-box"></div>
     </div>
+    <div class="batch-divider"><span>OR</span></div>
+    <div class="login-field">
+      <label>Trainer Batch</label>
+      <select id="login-batch" onchange="onBatchChange()">
+        <option value="">— Select a batch (optional) —</option>
+      </select>
+      <div class="day-info-box" id="batch-info-box"></div>
+    </div>
     <button class="btn-launch" id="btn-launch" disabled onclick="handleLaunch()">Launch Assessment →</button>
     <div class="admin-separator">
       <span>trainer tools</span>
@@ -502,6 +540,37 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
       <button class="btn-upload-csv" onclick="showUploadModal()">📤 Upload Day 6 CSV</button>
     </div>
     <div class="login-fun-tips" id="login-tip">💡 <strong>Did you know?</strong> Real moderators review hundreds of reviews daily. This simulator trains your eye for subtle violations!</div>
+  </div>
+</div>
+
+<!-- ═══ CREATE BATCH MODAL ═══ -->
+<div class="admin-modal-overlay hidden" id="batch-modal">
+  <div class="admin-modal-card" style="max-width:520px;width:min(520px,96vw);">
+    <div style="font-size:28px;margin-bottom:8px;text-align:center;">✨</div>
+    <h3 style="color:#00AF87;">Create New Batch</h3>
+    <p class="admin-modal-sub">Set up a new training batch with a custom CSV. Candidates can select this batch from the login screen.</p>
+    <div class="admin-field">
+      <label>Batch Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="batch-name" placeholder="e.g. June 2026 Cohort A" autocomplete="off" oninput="validateBatchForm()">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="admin-field" style="margin-bottom:0;">
+        <label>Start Date <span style="color:var(--red)">*</span></label>
+        <input type="date" id="batch-start" oninput="validateBatchForm()">
+      </div>
+      <div class="admin-field" style="margin-bottom:0;">
+        <label>End Date <span style="color:var(--red)">*</span></label>
+        <input type="date" id="batch-end" oninput="validateBatchForm()">
+      </div>
+    </div>
+    <div class="admin-field" style="margin-top:12px;">
+      <label>Questions CSV <span style="color:var(--red)">*</span></label>
+      <input type="file" id="batch-csv" accept=".csv,text/csv" style="padding:8px 10px;font-size:12px;" oninput="validateBatchForm()">
+      <div style="font-size:10.5px;color:var(--gray);margin-top:5px;line-height:1.5;">Use the same <strong>URD_Day6_Template.xlsx</strong> as a starting point.</div>
+    </div>
+    <div id="batch-status" style="font-size:11px;margin-top:8px;padding:8px 11px;border-radius:6px;display:none;line-height:1.5;"></div>
+    <button class="admin-login-btn" id="btn-create-batch" onclick="processBatchCreate()" disabled style="background:#00AF87;margin-top:14px;">Create Batch →</button>
+    <button class="admin-cancel-btn" onclick="closeBatchModal()">Cancel</button>
   </div>
 </div>
 
@@ -577,23 +646,57 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
         <div class="admin-stat-lbl">Failed</div>
       </div>
     </div>
+
+    <!-- BATCHES SECTION -->
+    <div class="admin-batches-card">
+      <div class="admin-batches-header">
+        <h3>📋 Active Batches</h3>
+        <button class="admin-create-batch-btn" onclick="showBatchModal()">✨ Create New Batch</button>
+      </div>
+      <div id="admin-batches-list" class="admin-batches-list">
+        <div class="admin-empty" style="padding:20px 12px;font-size:11px;">No batches created yet. Click "Create New Batch" to add one.</div>
+      </div>
+    </div>
+
     <div class="admin-table-card">
       <div class="admin-table-header">
-        <h3>Candidate Score Records</h3>
-        <div class="admin-filter-row">
-          <input type="text" class="admin-search-input" id="admin-search" placeholder="Search by name / ID…" oninput="renderAdminTable()">
+        <h3>📊 Candidate Score Records</h3>
+        <button class="admin-export-btn" onclick="exportCSV()">Export CSV</button>
+      </div>
+      <div class="admin-filters">
+        <div class="admin-filter-grid">
+          <input type="text" class="admin-search-input" id="admin-search" placeholder="🔍 Search by name / ID…" oninput="renderAdminTable()">
           <select class="admin-filter-select" id="admin-day-filter" onchange="renderAdminTable()">
-            <option value="">All Days</option>
+            <option value="">All Days/Batches</option>
             <option value="1">Day 1</option><option value="2">Day 2</option>
             <option value="3">Day 3</option><option value="4">Day 4</option>
             <option value="5">Day 5</option><option value="6">Day 6</option>
+            <option value="__batch">Batches only</option>
           </select>
           <select class="admin-filter-select" id="admin-pass-filter" onchange="renderAdminTable()">
             <option value="">All Results</option>
             <option value="pass">Passed</option>
             <option value="fail">Failed</option>
           </select>
-          <button class="admin-export-btn" onclick="exportCSV()">Export CSV</button>
+          <select class="admin-filter-select" id="admin-batch-filter" onchange="renderAdminTable()">
+            <option value="">All Batches</option>
+          </select>
+          <select class="admin-filter-select" id="admin-country-filter" onchange="renderAdminTable()">
+            <option value="">All Countries</option>
+          </select>
+          <select class="admin-filter-select" id="admin-period-filter" onchange="onPeriodChange()">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="7d">Last 7 days</option>
+            <option value="30d">Last 30 days</option>
+            <option value="3m">Last 3 months</option>
+            <option value="6m">Last 6 months</option>
+            <option value="1y">Last year</option>
+            <option value="custom">Custom range…</option>
+          </select>
+          <input type="date" class="admin-filter-select" id="admin-from-date" onchange="renderAdminTable()" style="display:none;" title="From date">
+          <input type="date" class="admin-filter-select" id="admin-to-date" onchange="renderAdminTable()" style="display:none;" title="To date">
+          <input type="month" class="admin-filter-select" id="admin-month-filter" onchange="renderAdminTable()" title="Filter by month">
         </div>
       </div>
       <div class="admin-table-wrap">
@@ -603,7 +706,8 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
               <th>#</th>
               <th>Employee ID</th>
               <th>Name</th>
-              <th>Day</th>
+              <th>Country</th>
+              <th>Day / Batch</th>
               <th>Score</th>
               <th>Correct</th>
               <th>Percentage</th>
@@ -865,7 +969,7 @@ body.dark .hist-row,body.dark .queue-filter-panel{background:#2c2c2e;border-colo
 const CONFIG = {
   // Paste your Google Apps Script Web App URL here (the one ending in /exec)
   // Example: 'https://script.google.com/macros/s/AKfycb.../exec'
-  GOOGLE_SHEET_URL: 'https://script.google.com/macros/s/AKfycbywkbkH0nQRAQn5_hodjlBEaOYvPDLQDotIOUFwhZnXlErOGjZoN2VI9OFyhVPD4MQ/exec',
+  GOOGLE_SHEET_URL: 'https://script.google.com/macros/s/AKfycbz3IvmkA6bolqJTdqblWucHwdMan7EJGKi9izT9S__L2HA614-fMs92tjIu63_vbzco/exec',
 };
 
 /* ════════════════════════════════════════════════
@@ -874,7 +978,7 @@ const CONFIG = {
 ════════════════════════════════════════════════ */
 const FULL_BANK = [
 
-/* ══ DAY 1 — Review Quality Policies ══ */
+/* ══ DAY 1 — Review Quality Policies ══ */  
 // 1. Not Substantive (2)
 {id:1001,day:1,policy:'Not Substantive',
  title:'PATRICK!!!!!!',
@@ -1814,6 +1918,118 @@ const CORRECT_REASONS = {
 };
 
 /* ════════════════════════════════════════════════
+   COUNTRY LIST (login + admin filter)
+════════════════════════════════════════════════ */
+const COUNTRIES = [
+  'India','United States','United Kingdom','Canada','Australia','Philippines',
+  'Mexico','Brazil','Singapore','UAE','Egypt','South Africa','Germany','France',
+  'Spain','Italy','Japan','South Korea','China','Vietnam','Indonesia','Malaysia',
+  'Thailand','Poland','Czech Republic','Hungary','Romania','Bulgaria','Russia',
+  'Turkey','Argentina','Chile','Colombia','Peru','Netherlands','Belgium','Sweden',
+  'Norway','Denmark','Finland','Ireland','Portugal','Greece','Switzerland',
+  'Austria','New Zealand','Saudi Arabia','Israel','Pakistan','Bangladesh',
+  'Nigeria','Kenya','Other'
+];
+
+/* ════════════════════════════════════════════════
+   BATCH STATE
+════════════════════════════════════════════════ */
+let _availableBatches=[];
+let selectedBatch='';        // batchId
+let selectedBatchName='';    // human-readable
+let selectedCountry='';
+
+async function fetchBatches(){
+  if(!CONFIG.GOOGLE_SHEET_URL)return [];
+  try{
+    const url=CONFIG.GOOGLE_SHEET_URL+(CONFIG.GOOGLE_SHEET_URL.includes('?')?'&':'?')+'action=list_batches';
+    const res=await fetch(url,{method:'GET'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    return Array.isArray(data)?data:[];
+  }catch(e){console.warn('Batches fetch failed:',e);return null;}
+}
+
+async function fetchBatchQuestions(batchId){
+  if(!CONFIG.GOOGLE_SHEET_URL||!batchId)return [];
+  try{
+    const url=CONFIG.GOOGLE_SHEET_URL+(CONFIG.GOOGLE_SHEET_URL.includes('?')?'&':'?')+'action=get_batch&id='+encodeURIComponent(batchId);
+    const res=await fetch(url,{method:'GET'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    return Array.isArray(data)?data:[];
+  }catch(e){console.warn('Batch fetch failed:',e);return null;}
+}
+
+function populateCountryDropdowns(){
+  // Login screen
+  const sel=document.getElementById('login-country');
+  if(sel&&sel.options.length<=1){
+    COUNTRIES.forEach(c=>{
+      const opt=document.createElement('option');
+      opt.value=c;opt.textContent=c;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+async function populateBatchDropdown(){
+  const sel=document.getElementById('login-batch');
+  if(!sel)return;
+  // Clear and re-populate
+  sel.innerHTML='<option value="">— Select a batch (optional) —</option>';
+  if(!CONFIG.GOOGLE_SHEET_URL){
+    const opt=document.createElement('option');
+    opt.value='';opt.textContent='(Cloud not configured)';opt.disabled=true;
+    sel.appendChild(opt);
+    return;
+  }
+  const batches=await fetchBatches();
+  if(!batches){
+    const opt=document.createElement('option');
+    opt.value='';opt.textContent='(Cloud unreachable)';opt.disabled=true;
+    sel.appendChild(opt);
+    return;
+  }
+  _availableBatches=batches;
+  // Sort newest first (by createdAt or startDate)
+  batches.sort((a,b)=>String(b.startDate||b.createdAt||'').localeCompare(String(a.startDate||a.createdAt||'')));
+  batches.forEach(b=>{
+    const opt=document.createElement('option');
+    opt.value=b.batchId;
+    const dateLabel=b.startDate?b.startDate:(b.createdAt?String(b.createdAt).slice(0,10):'');
+    opt.textContent=b.batchName+(dateLabel?' ('+dateLabel+')':'');
+    sel.appendChild(opt);
+  });
+  if(batches.length===0){
+    const opt=document.createElement('option');
+    opt.value='';opt.textContent='(No batches created yet)';opt.disabled=true;
+    sel.appendChild(opt);
+  }
+}
+
+async function onBatchChange(){
+  const sel=document.getElementById('login-batch');
+  const box=document.getElementById('batch-info-box');
+  const v=sel.value;
+  if(v){
+    // Clear day selection — batch overrides day
+    document.getElementById('login-day').value='';
+    document.getElementById('day-info-box').style.display='none';
+    const batch=_availableBatches.find(b=>b.batchId===v);
+    if(batch){
+      box.style.display='block';
+      box.innerHTML=`<strong>${batch.batchName}</strong><br>` +
+        (batch.startDate?'Start: '+batch.startDate+(batch.endDate?' · End: '+batch.endDate:''):'')+
+        '<br>'+batch.questionCount+' question(s) available · Created: '+(batch.createdAt||'—');
+    }
+  } else {
+    box.style.display='none';
+  }
+  validateLogin();
+}
+
+/* ════════════════════════════════════════════════
    DUPE CHECK & PROPERTY DETAILS (Same IP Reviews tools)
 ════════════════════════════════════════════════ */
 
@@ -1904,6 +2120,124 @@ function showCheckPopup(opts){
   `;
   overlay.appendChild(card);
   document.body.appendChild(overlay);
+}
+
+/* ════════════════════════════════════════════════
+   ADMIN — CREATE BATCH FLOW
+════════════════════════════════════════════════ */
+
+function showBatchModal(){
+  document.getElementById('batch-modal').classList.remove('hidden');
+  document.getElementById('batch-name').value='';
+  document.getElementById('batch-start').value='';
+  document.getElementById('batch-end').value='';
+  document.getElementById('batch-csv').value='';
+  document.getElementById('batch-status').style.display='none';
+  document.getElementById('btn-create-batch').disabled=true;
+  document.getElementById('btn-create-batch').textContent='Create Batch →';
+}
+function closeBatchModal(){document.getElementById('batch-modal').classList.add('hidden');}
+
+function validateBatchForm(){
+  const name=document.getElementById('batch-name').value.trim();
+  const start=document.getElementById('batch-start').value;
+  const end=document.getElementById('batch-end').value;
+  const file=document.getElementById('batch-csv').files[0];
+  const ok=name.length>=2&&start&&end&&file;
+  const status=document.getElementById('batch-status');
+  // Cross-validate dates
+  if(start&&end&&start>end){
+    status.style.display='block';
+    status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+    status.textContent='⚠ End date must be on or after start date.';
+    document.getElementById('btn-create-batch').disabled=true;
+    return;
+  } else if(status.textContent.startsWith('⚠ End date')){
+    status.style.display='none';
+  }
+  document.getElementById('btn-create-batch').disabled=!ok;
+}
+
+async function processBatchCreate(){
+  const status=document.getElementById('batch-status');
+  const btn=document.getElementById('btn-create-batch');
+  const name=document.getElementById('batch-name').value.trim();
+  const start=document.getElementById('batch-start').value;
+  const end=document.getElementById('batch-end').value;
+  const file=document.getElementById('batch-csv').files[0];
+  if(!name||!start||!end||!file){
+    status.style.display='block';
+    status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+    status.textContent='✗ Please fill in all required fields.';
+    return;
+  }
+  if(!CONFIG.GOOGLE_SHEET_URL){
+    status.style.display='block';
+    status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+    status.innerHTML='✗ Google Sheets not configured. Paste your Apps Script URL into <code>CONFIG.GOOGLE_SHEET_URL</code>.';
+    return;
+  }
+  btn.disabled=true;
+  status.style.display='block';
+  status.style.background='#fff3e0';status.style.color='#c5650e';status.style.border='1px solid #ffd4b8';
+  status.textContent='Parsing CSV…';
+
+  let parsed;
+  try{
+    const text=await file.text();
+    parsed=parseCSVToQuestions(text);
+  }catch(e){
+    status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+    status.innerHTML='✗ Parse error:<br>'+String(e.message||e).replace(/\n/g,'<br>');
+    btn.disabled=false;
+    return;
+  }
+
+  status.textContent='Creating batch with '+parsed.questions.length+' questions…';
+  try{
+    const res=await fetch(CONFIG.GOOGLE_SHEET_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        type:'create_batch',
+        batchName:name,
+        startDate:start,
+        endDate:end,
+        fileName:file.name,
+        createdBy:'Admin',
+        questions:parsed.questions
+      })
+    });
+    let result={ok:true};
+    try{result=await res.json();}catch(e){}
+    if(result.ok===false){
+      status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+      status.textContent='✗ Server error: '+(result.error||'unknown');
+      btn.disabled=false;
+      return;
+    }
+    status.style.background='#e8f5e9';status.style.color='#15803d';status.style.border='1px solid #bbf7d0';
+    let msg='✓ Batch <strong>'+name+'</strong> created with '+parsed.questions.length+' questions';
+    if(result.batchId)msg+='<br>Batch ID: <code>'+result.batchId+'</code>';
+    msg+='<br><br>Candidates can now select this batch from the login screen.';
+    status.innerHTML=msg;
+    btn.textContent='Create Another →';
+    btn.disabled=false;
+    // Refresh admin dashboard so the new batch shows
+    await renderAdminDashboard();
+  }catch(e){
+    status.style.background='#fef2f2';status.style.color='#c0392b';status.style.border='1px solid #fecaca';
+    status.textContent='✗ Create batch failed: '+String(e.message||e);
+    btn.disabled=false;
+  }
+}
+
+function onPeriodChange(){
+  const v=document.getElementById('admin-period-filter').value;
+  const showCustom=(v==='custom');
+  document.getElementById('admin-from-date').style.display=showCustom?'block':'none';
+  document.getElementById('admin-to-date').style.display=showCustom?'block':'none';
+  renderAdminTable();
 }
 
 /* ════════════════════════════════════════════════
@@ -2314,6 +2648,11 @@ async function renderAdminDashboard(){
   updateCloudStatus('loading');
   // Fetch all records (local + cloud merged)
   _adminRecordsCache=await getAllRecords();
+  // Also fetch batches for the batches section
+  if(CONFIG.GOOGLE_SHEET_URL){
+    const batches=await fetchBatches();
+    if(batches)_availableBatches=batches;
+  }
   updateCloudStatus('done');
   const records=_adminRecordsCache;
   const total=records.length;
@@ -2324,7 +2663,216 @@ async function renderAdminDashboard(){
   document.getElementById('stat-passed').textContent=passed;
   document.getElementById('stat-failed').textContent=failed;
   document.getElementById('stat-avg').textContent=total>0?avg+'%':'—';
+  renderAdminBatches();
+  populateAdminFilterDropdowns();
   renderAdminTable();
+}
+
+function renderAdminBatches(){
+  const list=document.getElementById('admin-batches-list');
+  if(!list)return;
+  if(!_availableBatches.length){
+    list.innerHTML='<div class="admin-empty" style="padding:20px 12px;font-size:11px;">No batches created yet. Click <strong>Create New Batch</strong> to add one.</div>';
+    return;
+  }
+  list.innerHTML=_availableBatches.map(b=>{
+    const attempts=_adminRecordsCache.filter(r=>r.batch===b.batchName||r.batchId===b.batchId).length;
+    return`<div class="admin-batch-card">
+      <span class="bn">${b.batchName||'(unnamed)'}</span>
+      <span class="bd">📅 ${b.startDate||'—'} → ${b.endDate||'—'}</span>
+      <div class="bm">
+        <span class="bc">${b.questionCount||0} Qs · ${attempts} attempt${attempts===1?'':'s'}</span>
+        <span class="bid">${b.batchId||''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function populateAdminFilterDropdowns(){
+  // Batch filter
+  const batchSel=document.getElementById('admin-batch-filter');
+  if(batchSel){
+    const cur=batchSel.value;
+    batchSel.innerHTML='<option value="">All Batches</option>';
+    const seen=new Set();
+    _availableBatches.forEach(b=>{
+      if(b.batchName&&!seen.has(b.batchName)){
+        seen.add(b.batchName);
+        const opt=document.createElement('option');
+        opt.value=b.batchName;
+        opt.textContent=b.batchName+(b.startDate?' ('+b.startDate+')':'');
+        batchSel.appendChild(opt);
+      }
+    });
+    // Also include any batch names that appear in records but not in batches list
+    _adminRecordsCache.forEach(r=>{
+      if(r.batch&&!seen.has(r.batch)){
+        seen.add(r.batch);
+        const opt=document.createElement('option');
+        opt.value=r.batch;
+        opt.textContent=r.batch;
+        batchSel.appendChild(opt);
+      }
+    });
+    if(cur)batchSel.value=cur;
+  }
+  // Country filter
+  const countrySel=document.getElementById('admin-country-filter');
+  if(countrySel){
+    const cur=countrySel.value;
+    countrySel.innerHTML='<option value="">All Countries</option>';
+    const seen=new Set();
+    _adminRecordsCache.forEach(r=>{
+      if(r.country&&!seen.has(r.country)){
+        seen.add(r.country);
+        const opt=document.createElement('option');
+        opt.value=r.country;
+        opt.textContent=r.country;
+        countrySel.appendChild(opt);
+      }
+    });
+    if(cur)countrySel.value=cur;
+  }
+}
+
+async function refreshAdminData(){
+  await renderAdminDashboard();
+  chipAlert('Data refreshed.');
+}
+
+function parseRecordDate(s){
+  if(!s)return null;
+  // Try to parse various date formats. New Date handles ISO, en-US, and en-IN reasonably.
+  const d=new Date(s);
+  if(!isNaN(d.getTime()))return d;
+  return null;
+}
+
+function applyPeriodFilter(records){
+  const period=(document.getElementById('admin-period-filter')||{}).value||'all';
+  if(period==='all')return records;
+  const now=new Date();
+  const start=new Date();
+  if(period==='custom'){
+    const from=(document.getElementById('admin-from-date')||{}).value;
+    const to=(document.getElementById('admin-to-date')||{}).value;
+    const fromDate=from?new Date(from+'T00:00:00'):null;
+    const toDate=to?new Date(to+'T23:59:59'):null;
+    return records.filter(r=>{
+      const d=parseRecordDate(r.datetime);
+      if(!d)return true;
+      if(fromDate&&d<fromDate)return false;
+      if(toDate&&d>toDate)return false;
+      return true;
+    });
+  }
+  if(period==='today'){start.setHours(0,0,0,0);}
+  else if(period==='7d'){start.setDate(start.getDate()-7);}
+  else if(period==='30d'){start.setDate(start.getDate()-30);}
+  else if(period==='3m'){start.setMonth(start.getMonth()-3);}
+  else if(period==='6m'){start.setMonth(start.getMonth()-6);}
+  else if(period==='1y'){start.setFullYear(start.getFullYear()-1);}
+  return records.filter(r=>{
+    const d=parseRecordDate(r.datetime);
+    if(!d)return true;
+    return d>=start&&d<=now;
+  });
+}
+
+function applyMonthFilter(records){
+  const m=(document.getElementById('admin-month-filter')||{}).value;
+  if(!m)return records;
+  // m is "YYYY-MM"
+  const [y,mo]=m.split('-').map(Number);
+  return records.filter(r=>{
+    const d=parseRecordDate(r.datetime);
+    if(!d)return true;
+    return d.getFullYear()===y&&(d.getMonth()+1)===mo;
+  });
+}
+
+function renderAdminTable(){
+  let records=_adminRecordsCache;
+  const search=(document.getElementById('admin-search')||{}).value?.toLowerCase()||'';
+  const dayFilter=(document.getElementById('admin-day-filter')||{}).value||'';
+  const passFilter=(document.getElementById('admin-pass-filter')||{}).value||'';
+  const batchFilter=(document.getElementById('admin-batch-filter')||{}).value||'';
+  const countryFilter=(document.getElementById('admin-country-filter')||{}).value||'';
+
+  records=applyPeriodFilter(records);
+  records=applyMonthFilter(records);
+
+  let filtered=records.filter(r=>{
+    const matchSearch=!search||(r.name||'').toLowerCase().includes(search)||(r.empId||'').toLowerCase().includes(search);
+    let matchDay=true;
+    if(dayFilter==='__batch'){matchDay=!!(r.batch||r.batchId);}
+    else if(dayFilter){matchDay=String(r.day)===dayFilter&&!(r.batch||r.batchId);}
+    const matchPass=!passFilter||(passFilter==='pass'?r.pct>=80:r.pct<80);
+    const matchBatch=!batchFilter||r.batch===batchFilter;
+    const matchCountry=!countryFilter||r.country===countryFilter;
+    return matchSearch&&matchDay&&matchPass&&matchBatch&&matchCountry;
+  });
+  // Sort by datetime descending (most recent first)
+  filtered=filtered.slice().reverse();
+  const tbody=document.getElementById('admin-tbody');
+  const empty=document.getElementById('admin-empty');
+  if(filtered.length===0){
+    tbody.innerHTML='';
+    empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map((r,i)=>{
+    const pass=r.pct>=80;
+    const rowClass=pass?'row-pass':'row-fail';
+    const pctClass=r.pct>=80?'high':(r.pct>=60?'mid':'low');
+    const decisionRows=(r.decisions||[]).map((d,j)=>{
+      const dec=d.decision||'';
+      const cl={'publish':'publish','moderation_remove':'mod','member_fraud':'mem','property_fraud':'prop','timeout':'mod'}[dec]||'mod';
+      const labels={'publish':'Publish','moderation_remove':'Mod Remove','member_fraud':'Mbr Fraud','property_fraud':'Prop Fraud','timeout':'Timeout'};
+      let statusIcon;
+      if(d.correct){statusIcon='<span class="q-correct-tag ok">✓ Correct</span>';}
+      else if(d.actionCorrect&&!d.reasonCorrect){statusIcon='<span class="q-correct-tag bad">✕ Wrong Reason</span>';}
+      else{statusIcon='<span class="q-correct-tag bad">✕ Wrong Action</span>';}
+      const correctInfo=d.correct?'':' <span style="color:var(--gray);font-size:9px;">(Expected: '+(d.correctReason||d.correctAnswer||'—')+')</span>';
+      return`<div class="q-answer-row">
+        <span class="q-num-tag">Q${d.q||j+1}</span>
+        <span class="q-review-snippet">${(d.reviewTitle||'').slice(0,42)}</span>
+        <span class="q-decision-tag ${cl}">${labels[dec]||dec}${d.reason?' → '+d.reason:''}</span>
+        <span>${statusIcon}${correctInfo}</span>
+      </div>`;
+    }).join('');
+    // Day / Batch column — show batch name if available, else "Day N — name"
+    const dayOrBatchLabel=(r.batch||r.batchId)
+      ? '<span style="color:#00875a;font-weight:700;">📋 '+(r.batch||'Batch')+'</span>'
+      : 'Day '+(r.day||'—')+(DAYS[r.day]?' — '+DAYS[r.day].name:'');
+    return`<tr class="${rowClass}">
+      <td>${i+1}</td>
+      <td><strong>${r.empId||'—'}</strong></td>
+      <td>${r.name||'—'}</td>
+      <td>${r.country?'<span style="color:#324a6e;font-weight:600;">'+r.country+'</span>':'<span style="color:var(--gray);">—</span>'}</td>
+      <td>${dayOrBatchLabel}</td>
+      <td><strong>${r.score||0} pts</strong></td>
+      <td>${r.correct||0} / ${r.total||15}</td>
+      <td>
+        <div class="pct-cell">
+          <div class="pct-bar-track"><div class="pct-bar-fill ${pctClass}" style="width:${r.pct||0}%"></div></div>
+          <span class="pct-num ${pctClass}">${r.pct||0}%</span>
+        </div>
+      </td>
+      <td><span class="score-pill ${pass?'pass':'fail'}">${pass?'PASSED':'FAILED'}</span></td>
+      <td style="font-size:10px;color:var(--gray)">${r.datetime||'—'}</td>
+      <td><button class="answer-expand-btn" onclick="toggleAnswerRow(this,'detail-${i}')">View Answers</button></td>
+    </tr>
+    <tr class="answer-detail-row" id="detail-${i}">
+      <td colspan="11">
+        <div class="answer-detail-inner">
+          <div style="font-size:10.5px;font-weight:800;color:var(--ink);margin-bottom:8px;">📋 Answer Breakdown — ${r.name}</div>
+          ${decisionRows||'<span style="color:var(--gray);font-size:9.5px;">No answer detail recorded.</span>'}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
 function updateCloudStatus(state){
@@ -2352,76 +2900,6 @@ async function refreshAdminData(){
   chipAlert('Data refreshed.');
 }
 
-function renderAdminTable(){
-  const records=_adminRecordsCache;
-  const search=(document.getElementById('admin-search')||{}).value?.toLowerCase()||'';
-  const dayFilter=(document.getElementById('admin-day-filter')||{}).value||'';
-  const passFilter=(document.getElementById('admin-pass-filter')||{}).value||'';
-  let filtered=records.filter(r=>{
-    const matchSearch=!search||(r.name||'').toLowerCase().includes(search)||(r.empId||'').toLowerCase().includes(search);
-    const matchDay=!dayFilter||String(r.day)===dayFilter;
-    const matchPass=!passFilter||(passFilter==='pass'?r.pct>=80:r.pct<80);
-    return matchSearch&&matchDay&&matchPass;
-  });
-  // Sort by datetime descending (most recent first)
-  filtered=filtered.slice().reverse();
-  const tbody=document.getElementById('admin-tbody');
-  const empty=document.getElementById('admin-empty');
-  if(filtered.length===0){
-    tbody.innerHTML='';
-    empty.style.display='block';
-    return;
-  }
-  empty.style.display='none';
-  tbody.innerHTML=filtered.map((r,i)=>{
-    const pass=r.pct>=80;
-    const rowClass=pass?'row-pass':'row-fail';
-    const pctClass=r.pct>=80?'high':(r.pct>=60?'mid':'low');
-    const decisionRows=(r.decisions||[]).map((d,j)=>{
-      const dec=d.decision||'';
-      const cl={'publish':'publish','moderation_remove':'mod','member_fraud':'mem','property_fraud':'prop','timeout':'mod'}[dec]||'mod';
-      const labels={'publish':'Publish','moderation_remove':'Mod Remove','member_fraud':'Mbr Fraud','property_fraud':'Prop Fraud','timeout':'Timeout'};
-      // Detailed status icon
-      let statusIcon;
-      if(d.correct){statusIcon='<span class="q-correct-tag ok">✓ Correct</span>';}
-      else if(d.actionCorrect&&!d.reasonCorrect){statusIcon='<span class="q-correct-tag bad">✕ Wrong Reason</span>';}
-      else{statusIcon='<span class="q-correct-tag bad">✕ Wrong Action</span>';}
-      const correctInfo=d.correct?'':' <span style="color:var(--gray);font-size:9px;">(Expected: '+(d.correctReason||d.correctAnswer||'—')+')</span>';
-      return`<div class="q-answer-row">
-        <span class="q-num-tag">Q${d.q||j+1}</span>
-        <span class="q-review-snippet">${(d.reviewTitle||'').slice(0,42)}</span>
-        <span class="q-decision-tag ${cl}">${labels[dec]||dec}${d.reason?' → '+d.reason:''}</span>
-        <span>${statusIcon}${correctInfo}</span>
-      </div>`;
-    }).join('');
-    return`<tr class="${rowClass}">
-      <td>${i+1}</td>
-      <td><strong>${r.empId||'—'}</strong></td>
-      <td>${r.name||'—'}</td>
-      <td>Day ${r.day||'—'} — ${DAYS[r.day]?.name||''}</td>
-      <td><strong>${r.score||0} pts</strong></td>
-      <td>${r.correct||0} / ${r.total||15}</td>
-      <td>
-        <div class="pct-cell">
-          <div class="pct-bar-track"><div class="pct-bar-fill ${pctClass}" style="width:${r.pct||0}%"></div></div>
-          <span class="pct-num ${pctClass}">${r.pct||0}%</span>
-        </div>
-      </td>
-      <td><span class="score-pill ${pass?'pass':'fail'}">${pass?'PASSED':'FAILED'}</span></td>
-      <td style="font-size:10px;color:var(--gray)">${r.datetime||'—'}</td>
-      <td><button class="answer-expand-btn" onclick="toggleAnswerRow(this,'detail-${i}')">View Answers</button></td>
-    </tr>
-    <tr class="answer-detail-row" id="detail-${i}">
-      <td colspan="10">
-        <div class="answer-detail-inner">
-          <div style="font-size:10.5px;font-weight:800;color:var(--ink);margin-bottom:8px;">📋 Answer Breakdown — ${r.name}</div>
-          ${decisionRows||'<span style="color:var(--gray);font-size:9.5px;">No answer detail recorded.</span>'}
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
 function toggleAnswerRow(btn,rowId){
   const row=document.getElementById(rowId);
   if(!row)return;
@@ -2433,8 +2911,13 @@ function toggleAnswerRow(btn,rowId){
 function exportCSV(){
   const records=_adminRecordsCache.length?_adminRecordsCache:getScoreRecords();
   if(!records.length){chipAlert('No records to export.');return;}
-  const headers=['EmployeeID','Name','Day','DayName','Score','Pct','Correct','Total','Result','DateTime'];
-  const rows=records.map(r=>[r.empId,r.name,r.day,DAYS[r.day]?.name||'',r.score,r.pct,r.correct,r.total,(r.pct>=80?'PASSED':'FAILED'),r.datetime].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
+  const headers=['EmployeeID','Name','Country','Batch','Day','DayName','Score','Pct','Correct','Total','Result','DateTime'];
+  const rows=records.map(r=>[
+    r.empId,r.name,r.country||'',r.batch||'',r.day||'',
+    r.batch||DAYS[r.day]?.name||'',
+    r.score,r.pct,r.correct,r.total,
+    (r.pct>=80?'PASSED':'FAILED'),r.datetime
+  ].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
   const csv=[headers.join(','),...rows].join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
@@ -2447,14 +2930,18 @@ const elEmpId=()=>document.getElementById('login-empid');
 const elName=()=>document.getElementById('login-name');
 
 function validateLogin(){
-  const id=elEmpId().value.trim(),name=elName().value.trim(),day=document.getElementById('login-day').value;
+  const id=elEmpId().value.trim(),name=elName().value.trim();
+  const day=document.getElementById('login-day').value;
+  const batch=document.getElementById('login-batch').value;
+  const country=(document.getElementById('login-country')||{}).value||'';
   const idOk=/^[a-zA-Z0-9\-]{3,20}$/.test(id);
   const nameOk=name.length>=2;
-  const dayOk=!!day;
+  const dayOrBatchOk=!!day||!!batch;
+  const countryOk=!!country;
   document.getElementById('empid-err').style.display=idOk||!id?'none':'block';
   elEmpId().classList.toggle('invalid',!idOk&&!!id);
   document.getElementById('name-err').style.display=nameOk||!name?'none':'block';
-  document.getElementById('btn-launch').disabled=!(idOk&&nameOk&&dayOk);
+  document.getElementById('btn-launch').disabled=!(idOk&&nameOk&&dayOrBatchOk&&countryOk);
   // Rotate tip
   const tipEl=document.getElementById('login-tip');
   if(tipEl) tipEl.innerHTML='💡 <strong>Tip:</strong> '+FUN_TIPS[Math.floor(Math.random()*FUN_TIPS.length)].slice(2);
@@ -2475,11 +2962,15 @@ async function onDayChange(){
   const sel=document.getElementById('login-day');
   const box=document.getElementById('day-info-box');
   const v=sel.value;
+  if(v){
+    // Clear batch — day overrides batch
+    document.getElementById('login-batch').value='';
+    document.getElementById('batch-info-box').style.display='none';
+  }
   if(v&&DAYS[v]){
     box.style.display='block';
     box.innerHTML=`<strong>${DAYS[v].name}</strong><br>${DAY_DESCRIPTIONS[v]}`;
     if(v==='6'){
-      // Show live cloud status
       box.innerHTML+=`<br><br><span id="d6-status" style="color:var(--gray);">⏳ Checking cloud for uploaded questions…</span>`;
       if(!CONFIG.GOOGLE_SHEET_URL){
         document.getElementById('d6-status').innerHTML='<span style="color:var(--red);">⚠ Google Sheets not configured — Day 6 requires a connected sheet. Ask your trainer.</span>';
@@ -2501,11 +2992,24 @@ async function onDayChange(){
 function goOnboarding(){
   empId=elEmpId().value.trim();
   empName=elName().value.trim();
-  selectedDay=parseInt(document.getElementById('login-day').value);
-  const day=DAYS[selectedDay];
-  document.getElementById('onboard-day-tag').textContent='Day '+selectedDay;
-  document.getElementById('onboard-day-title').textContent=day.name;
-  document.getElementById('onboard-desc').textContent='15 randomly selected questions from the Day '+selectedDay+' policy bank ('+day.name+'). Each question has 5 minutes to answer.';
+  selectedCountry=document.getElementById('login-country').value;
+  const batchVal=document.getElementById('login-batch').value;
+  if(batchVal){
+    selectedBatch=batchVal;
+    const batch=_availableBatches.find(b=>b.batchId===batchVal);
+    selectedBatchName=batch?batch.batchName:batchVal;
+    selectedDay=0; // not a day
+    document.getElementById('onboard-day-tag').textContent='Batch';
+    document.getElementById('onboard-day-title').textContent=selectedBatchName;
+    document.getElementById('onboard-desc').textContent='15 randomly selected questions from the '+selectedBatchName+' batch. Each question has 5 minutes to answer.';
+  } else {
+    selectedDay=parseInt(document.getElementById('login-day').value);
+    selectedBatch='';selectedBatchName='';
+    const day=DAYS[selectedDay];
+    document.getElementById('onboard-day-tag').textContent='Day '+selectedDay;
+    document.getElementById('onboard-day-title').textContent=day.name;
+    document.getElementById('onboard-desc').textContent='15 randomly selected questions from the Day '+selectedDay+' policy bank ('+day.name+'). Each question has 5 minutes to answer.';
+  }
   document.getElementById('phase-login').style.display='none';
   document.getElementById('phase-onboarding').style.display='flex';
 }
@@ -2515,11 +3019,16 @@ async function goWorkspace(){
   document.getElementById('phase-workspace').style.display='flex';
   document.getElementById('sub-reviewer-id').textContent='Reviewer: '+maskId(empId);
   document.getElementById('classifier-val').textContent=empName;
-  document.getElementById('day-mode-badge').textContent='Day '+selectedDay+' — '+DAYS[selectedDay].name;
-  // Loading state for Day 6
-  if(selectedDay===6){
-    document.getElementById('review-title-text').textContent='Loading Day 6 questions from cloud…';
-    document.getElementById('review-body-text').textContent='Fetching the latest serious-issue review set uploaded by your trainer.';
+  if(selectedBatch){
+    document.getElementById('day-mode-badge').textContent='Batch — '+selectedBatchName;
+    document.getElementById('day-mode-badge').style.cssText='background:#e8f5e9;color:#15803d;border:1px solid #bbf7d0;padding:2px 8px;border-radius:16px;font-size:9px;font-weight:700;';
+  } else {
+    document.getElementById('day-mode-badge').textContent='Day '+selectedDay+' — '+DAYS[selectedDay].name;
+  }
+  // Loading state for cloud-loaded sets
+  if(selectedDay===6||selectedBatch){
+    document.getElementById('review-title-text').textContent='Loading questions from cloud…';
+    document.getElementById('review-body-text').textContent=(selectedBatch?'Fetching the '+selectedBatchName+' batch':'Fetching the latest Day 6 set')+' from your Google Sheet.';
     setActionsEnabled(false);
   }
   const result=await buildDayBank();
@@ -2545,8 +3054,23 @@ function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.ra
 
 async function buildDayBank(){
   let pool;
-  if(selectedDay===6){
-    // Day 6 — fetch from Google Sheets
+  if(selectedBatch){
+    // Batch — fetch from Google Sheets
+    if(!CONFIG.GOOGLE_SHEET_URL){
+      activeQBank=[];
+      return {error:'Google Sheets not configured. Batches require a connected sheet.'};
+    }
+    const raw=await fetchBatchQuestions(selectedBatch);
+    if(raw===null){
+      activeQBank=[];
+      return {error:'Cannot reach Google Sheet for this batch. Check your connection.'};
+    }
+    if(raw.length===0){
+      activeQBank=[];
+      return {error:'No questions found for the selected batch.'};
+    }
+    pool=raw.map((q,i)=>convertDay6Question(q,i));
+  } else if(selectedDay===6){
     if(!CONFIG.GOOGLE_SHEET_URL){
       activeQBank=[];
       return {error:'Google Sheets not configured. Day 6 requires a connected sheet.'};
@@ -2945,8 +3469,11 @@ function endAssessment(){
   // Save to localStorage AND Google Sheet (if configured) for admin
   const rec={
     empId,name:empName,
-    day:selectedDay,
-    dayName:DAYS[selectedDay]?.name||'',
+    country:selectedCountry||'',
+    batch:selectedBatchName||'',
+    batchId:selectedBatch||'',
+    day:selectedDay||0,
+    dayName:selectedBatch?selectedBatchName:(DAYS[selectedDay]?.name||''),
     score,pct,
     correct:correctCount,total:totalQ,
     datetime:new Date().toLocaleString('en-IN'),
@@ -3040,10 +3567,12 @@ async function retake(){
   loadQuestion();startTimer();
 }
 
-// Rotate tips on page load
+// Rotate tips on page load + populate login dropdowns
 window.addEventListener('load',()=>{
   const tipEl=document.getElementById('login-tip');
   if(tipEl) tipEl.innerHTML='💡 <strong>Tip:</strong> '+FUN_TIPS[Math.floor(Math.random()*FUN_TIPS.length)].slice(2);
+  populateCountryDropdowns();
+  populateBatchDropdown();
 });
 </script>
 </body>
